@@ -1,0 +1,414 @@
+/* =========================================================
+   Claim File — shared stylesheet
+   Design language: an insurance claims ledger / case folder.
+   Deep-brown masthead, nude/tan paper case cards, caramel accent,
+   two warm brown tones standing in for severity and frequency.
+   ========================================================= */
+
+:root {
+  --ink: #36241a;
+  --ink-2: #46311f;
+  --paper: #f0e4d3;
+  --paper-dim: #e2d2b8;
+  --line: rgba(54, 36, 26, 0.16);
+  --line-on-ink: rgba(240, 228, 211, 0.14);
+  --gold: #a9744f;
+  --gold-bright: #cd9b6f;
+  --severity: #6f4427;
+  --frequency: #a9784e;
+  --ink-text: #f1e6d4;
+  --ink-text-dim: #cbb99d;
+  --paper-text: #2e2015;
+  --paper-text-dim: #6c5843;
+  --radius: 2px;
+  --tab-gap: 3px;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--ink-text);
+  font-family: "Source Sans 3", "Inter", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; }
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  background: var(--gold);
+  color: var(--ink);
+  padding: 0.6rem 1rem;
+  z-index: 100;
+  font-weight: 600;
+}
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+}
+
+/* ---------- Masthead ---------- */
+
+.masthead {
+  background: var(--ink);
+  border-bottom: 1px solid var(--line-on-ink);
+  padding: 1.5rem clamp(1rem, 4vw, 3rem) 0;
+}
+
+.masthead-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-bottom: 1.25rem;
+}
+
+.file-id {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+}
+
+.file-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(1.6rem, 3.2vw, 2.35rem);
+  margin: 0.2rem 0 0;
+  color: var(--ink-text);
+  letter-spacing: -0.01em;
+}
+
+.file-stamp {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1.5px solid var(--gold);
+  color: var(--gold-bright);
+  padding: 0.45rem 0.7rem;
+  transform: rotate(-2deg);
+  white-space: nowrap;
+}
+
+/* ---------- Folder-tab navigation ---------- */
+
+.tabs-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.tabs {
+  display: flex;
+  gap: var(--tab-gap);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: max-content;
+}
+
+.tabs a {
+  display: block;
+  text-decoration: none;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.76rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.7rem 1rem 0.6rem;
+  background: var(--ink-2);
+  color: var(--ink-text-dim);
+  border: 1px solid var(--line-on-ink);
+  border-bottom: none;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  position: relative;
+  top: 2px;
+  transition: color 0.15s ease, background 0.15s ease, top 0.15s ease;
+}
+
+.tabs a:hover {
+  color: var(--ink-text);
+  background: #232a35;
+}
+
+.tabs a:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: -2px;
+}
+
+.tabs a.active {
+  background: var(--paper);
+  color: var(--paper-text);
+  border-color: var(--paper);
+  top: 0;
+  font-weight: 600;
+}
+
+.tabs a.active::after {
+  content: "";
+  position: absolute;
+  left: 0.6em;
+  bottom: 0.42em;
+  width: 5px;
+  height: 5px;
+  background: var(--severity);
+  border-radius: 50%;
+}
+
+/* ---------- Case file body ---------- */
+
+.case-file {
+  background: var(--paper);
+  color: var(--paper-text);
+  min-height: 60vh;
+}
+
+.case-inner {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: clamp(2rem, 5vw, 3.5rem) clamp(1rem, 4vw, 2.5rem) 4rem;
+}
+
+.eyebrow {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--severity);
+  margin: 0 0 0.6rem;
+}
+
+.page-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(1.9rem, 4vw, 2.8rem);
+  margin: 0 0 1.6rem;
+  letter-spacing: -0.01em;
+}
+
+.ledger-rule {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 1.8rem 0;
+}
+
+.content-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 1.4fr);
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: start;
+}
+
+@media (max-width: 800px) {
+  .content-cols { grid-template-columns: 1fr; }
+}
+
+.prose p {
+  margin: 0 0 1.15rem;
+  color: var(--paper-text);
+}
+
+.prose p:first-of-type::first-letter {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 2.6rem;
+  font-weight: 600;
+  float: left;
+  line-height: 0.85;
+  padding: 0.05em 0.08em 0 0;
+  color: var(--severity);
+}
+
+/* ---------- Sidebar ledger card ---------- */
+
+.ledger-card {
+  background: var(--paper-dim);
+  border: 1px solid var(--line);
+  padding: 1.4rem 1.4rem 1.6rem;
+}
+
+.ledger-card h2 {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0 0 0.9rem;
+  color: var(--paper-text-dim);
+}
+
+.ledger-card dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 0.8rem;
+  font-size: 0.88rem;
+}
+
+.ledger-card dt {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  color: var(--paper-text-dim);
+}
+
+.ledger-card dt::after { content: ":"; }
+
+.chip-row {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.chip {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid var(--line);
+}
+
+.chip.sev { color: var(--severity); border-color: var(--severity); }
+.chip.freq { color: var(--frequency); border-color: var(--frequency); }
+
+/* ---------- Research questions (ledger line items) ---------- */
+
+.questions {
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: q;
+  border-top: 1px solid var(--line);
+}
+
+.questions li {
+  counter-increment: q;
+  display: grid;
+  grid-template-columns: 2.4rem 1fr;
+  gap: 0.9rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--line);
+  align-items: baseline;
+}
+
+.questions li::before {
+  content: counter(q, decimal-leading-zero);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  color: var(--gold);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.questions li p { margin: 0; }
+
+/* ---------- Introduction: byline, sections, figure, references ---------- */
+
+.byline {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.8rem;
+  color: var(--paper-text-dim);
+  margin: 0 0 2rem;
+}
+
+.section-heading {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+  font-size: 1.4rem;
+  margin: 2.4rem 0 1rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--line);
+  color: var(--paper-text);
+}
+
+.section-heading:first-of-type {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.figure-placeholder {
+  margin: 2rem 0;
+  padding: 0;
+}
+
+.figure-box {
+  background: var(--paper-dim);
+  border: 1px dashed var(--paper-text-dim);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.8rem;
+  color: var(--paper-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.figure-placeholder figcaption {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.78rem;
+  color: var(--paper-text-dim);
+  margin-top: 0.6rem;
+  text-align: center;
+}
+
+.references {
+  margin: 0;
+  padding-left: 1.4rem;
+}
+
+.references li {
+  margin-bottom: 0.9rem;
+  color: var(--paper-text);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+/* ---------- Placeholder module sections ---------- */
+
+.placeholder {
+  background: var(--paper-dim);
+  border: 1px dashed var(--paper-text-dim);
+  padding: 2.2rem;
+}
+
+.placeholder .eyebrow { color: var(--frequency); }
+
+.placeholder p {
+  margin: 0;
+  color: var(--paper-text-dim);
+}
+
+/* ---------- Footer ---------- */
+
+.site-footer {
+  background: var(--ink);
+  color: var(--ink-text-dim);
+  padding: 1.6rem clamp(1rem, 4vw, 3rem);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  border-top: 1px solid var(--line-on-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition: none !important; }
+}
