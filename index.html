@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Introduction — Frequency-Severity Modeling for Insurance Claims</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Source+Sans+3:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="masthead">
+  <div class="masthead-row">
+    <div>
+      <h1 class="file-title">Frequency-Severity Modeling for Insurance Claims: A Predictive Framework for Risk-Based Pricing</h1>
+    </div>
+  </div>
+  <nav class="tabs-wrap" aria-label="Project sections">
+    <ul class="tabs">
+      <li><a href="index.html" class="active">Introduction</a></li>
+      <li><a href="dataprep_eda.html">Data Preparation and EDA</a></li>
+      <li><a href="clustering.html">Clustering</a></li>
+      <li><a href="pca.html">Principal Component Analysis</a></li>
+      <li><a href="naivebayes.html">NaiveBayes</a></li>
+      <li><a href="dectrees.html">DecTrees</a></li>
+      <li><a href="svms.html">SVMs</a></li>
+      <li><a href="regression.html">Regression</a></li>
+      <li><a href="nn.html">Neural Networks</a></li>
+      <li><a href="conclusions.html">Conclusions</a></li>
+    </ul>
+  </nav>
+</header>
+<main id="main" class="case-file">
+  <div class="case-inner">
+    <p class="eyebrow">Introduction</p>
+    <h2 class="page-title">Frequency-Severity Modeling for Insurance Claims: A Predictive Framework for Risk-Based Pricing</h2>
+    <p class="byline">Sharon Bayela &middot; August 24, 2026</p>
+
+    <h3 class="section-heading">Topic</h3>
+    <div class="prose">
+      <p>Do claim frequency and severity follow predictable patterns based on patient and policy characteristics, and therefore can modeling them together improve risk-based pricing and early fraud detection in health insurance?</p>
+    </div>
+
+    <h3 class="section-heading">Introduction</h3>
+    <div class="prose">
+      <p>Insurance companies have faced rising pressure to manage the size and frequency of claims strategically, and this pressure is felt just as sharply in health insurance as in any other line of business. A claim, broadly speaking, is when an individual or entity reports a loss to their insurance company, prompting an investigation and, if approved, a payment or service meant to address the loss. In health insurance specifically, this could mean a hospital stay, a surgery, ongoing treatment for a chronic condition, or any other covered medical service. Imagine a health insurer having three of its enrolled members require extensive hospital care within the same short period; the cost of that alone can meaningfully strain the company's finances, even before accounting for the thousands of smaller claims processed every day. It is wise for insurers to always be financially prepared for these kinds of scenarios, since claims of this scale are not rare exceptions but a routine part of the business. This need for preparation affects more than just the insurance company itself. Patients depend on their insurer being financially stable enough to pay out claims when they need care the most. Employers who sponsor health coverage for their employees are affected too, since their premiums are shaped by how well an insurer can predict and manage claim costs across its membership. Healthcare providers, who rely on timely and accurate reimbursement from insurers, are also affected when claim management breaks down. For all of these groups, insurance is meant to provide financial protection, but for the insurer, this protection can only be delivered if claim management is approached strategically rather than reactively.</p>
+
+      <p>Insurers manage this risk through an agreement made with each client, which typically includes risk-based pricing, meaning prices and terms are set according to how likely a person is to file a claim or to cause a financial loss. Lower-risk individuals are generally offered lower rates, while higher-risk individuals face higher ones. Two ideas sit at the center of this pricing decision: claim severity and claim frequency. Claim severity is the average cost of a claim once it happens, telling an insurer how expensive each claim tends to be. Claim frequency, by contrast, describes how often claims occur. An insurer's total losses come from these two factors multiplied together, meaning that if claims become half as common but twice as costly, the insurer ends up in roughly the same financial position as before. This is precisely why insurers care about separating the two: the story of <strong>&ldquo;we had fewer claims this year&rdquo;</strong> and the story of <strong>&ldquo;each claim now costs far more&rdquo;</strong> point to very different underlying causes and call for very different responses. Prior research has already begun exploring how insurers can better anticipate these patterns using the data they already collect. One case study, conducted within a health insurer's own claims department, found that a company's usual method for estimating end-of-year claim costs could be improved by paying closer attention to patterns already present in a client's claims history (Cordeiro, 2022). A related study of motor liability bodily injury claims similarly found that certain claim characteristics, such as claim type and length of waiting period, were strongly associated with whether a claim became unusually costly (Brati, Braimllari, &amp; Gje&ccedil;i, 2025). Though conducted outside a health insurance setting, this second study reinforces a point directly relevant to health claims: not every claim carries the same risk of becoming expensive, and some of that risk is visible in information the insurer already holds. Existing U.S. health insurance literature generally treats fraud detection and cost prediction as distinct domains, rarely examining claim frequency and loss severity within an integrated framework; this project addresses that gap by establishing a consistent approach to leveraging these combined metrics effectively.</p>
+    </div>
+
+    <figure class="figure-placeholder">
+      <div class="figure-box">Figure 1 &mdash; image file not yet provided</div>
+      <figcaption>An image summarizing the Claim Insurance lifecycle</figcaption>
+    </figure>
+
+    <h3 class="section-heading">Listed below are the questions this project is going to answer:</h3>
+    <ol class="questions">
+      <li><p>What is the difference between claim frequency and claim severity, and why do insurers need to understand both separately?</p></li>
+      <li><p>What patient, provider, or policy characteristics are most closely associated with how often a health insurance claim occurs?</p></li>
+      <li><p>What characteristics are most closely associated with how costly a health insurance claim becomes once it happens?</p></li>
+      <li><p>Do the factors that drive claim frequency differ from the factors that drive claim severity, or do they overlap?</p></li>
+      <li><p>How do claim frequency and severity vary across different types of health coverage, such as Medicaid, Medicare, and private insurance?</p></li>
+      <li><p>How does a patient's chronic condition status relate to both how often they file claims and how expensive those claims tend to be?</p></li>
+      <li><p>How does geographic location influence claim frequency and severity across different states?</p></li>
+      <li><p>Why is it important for insurers to study frequency and severity together, rather than looking at total claim cost alone?</p></li>
+      <li><p>How can understanding claim frequency and severity patterns help insurers detect claims that may be unusual or potentially fraudulent?</p></li>
+      <li><p>How could a clearer understanding of frequency and severity patterns support fairer, more accurate risk-based pricing for health insurance policyholders?</p></li>
+    </ol>
+
+    <h3 class="section-heading">References</h3>
+    <ol class="references">
+      <li>Brati, E., Braimllari, A., &amp; Gje&ccedil;i, A. (2025). Machine Learning Applications for Predicting High-Cost Claims Using Insurance Data. <em>Data</em>, 10(6), 90. https://doi.org/10.3390/data10060090</li>
+      <li>Cordeiro, M. F. M. (2022). <em>A Machine Learning Approach to Predict Health Insurance Claims</em> (Internship report). NOVA Information Management School, Universidade Nova de Lisboa.</li>
+    </ol>
+  </div>
+</main>
+<footer class="site-footer">
+  <span>Sharon Bayela &middot; Machine Learning for Data Science &middot; Fall 2026</span>
+  <span>Tab: Introduction</span>
+</footer>
+</body>
+</html>
