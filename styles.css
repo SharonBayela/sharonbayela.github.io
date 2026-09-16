@@ -224,16 +224,6 @@ a { color: inherit; }
   color: var(--paper-text);
 }
 
-.prose p:first-of-type::first-letter {
-  font-family: "Fraunces", Georgia, serif;
-  font-size: 2.6rem;
-  font-weight: 600;
-  float: left;
-  line-height: 0.85;
-  padding: 0.05em 0.08em 0 0;
-  color: var(--severity);
-}
-
 /* ---------- Sidebar ledger card ---------- */
 
 .ledger-card {
