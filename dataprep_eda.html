@@ -84,6 +84,11 @@
       <figcaption>How the data looks like after cleaning and merging</figcaption>
     </figure>
 
+    <h3 class="section-heading">How the Data Was Cleaned</h3>
+    <div class="prose">
+      <p>Getting from the raw files to the finished dataset took a few straightforward cleaning steps. Dollar values in the premium files (like &ldquo;$4,353&rdquo;) were stripped of symbols and commas and converted into real numbers. The premium files also included a national &ldquo;United States&rdquo; summary row, which was removed so it wouldn't be mistaken for an actual state. Since the claims data used two-letter state codes and the premium files used full state names, a lookup table was used to match the two. Medicaid and Medicare figures were originally reported annually, so they were divided by twelve to match the monthly Private premium figures. Medicaid's overlapping age categories (Adults, ACA Expansion Adults, and People with Disabilities) were averaged together where they applied to the same age range, since the claims data had no way to tell them apart. From there, a new Premiums column was filled in row by row based on each patient's insurance type and age, pulling the matching benchmark value from the correct source. Finally, a small number of leftover gaps in Provider_Specialty and Prior_Visits_12m were filled in rather than dropped, and any blank Insurance_Type values were labeled &ldquo;Other,&rdquo; so no row was left incomplete.</p>
+    </div>
+
     <h3 class="section-heading">Exploratory Data Analysis</h3>
 
     <figure class="figure-placeholder">
@@ -176,12 +181,8 @@
       <p>This last one pulls both of those threads together into a single comparison, breaking down claim cost and premiums by state and insurance type at the same time. Lining them up side by side makes a pattern jump out immediately: claim amounts barely shift no matter which state or insurance type you're looking at, but premiums swing wildly, especially for Medicaid and Medicare, which run two to three times higher than Private or Self-Pay in almost every state. That gap is really the whole reason this project exists. If premiums were tightly tied to actual risk, you'd expect them to track claim costs a lot more closely than they do here, and this chart is the clearest evidence in the entire EDA that they don't.</p>
 
       <p><em>Note: Notably, this reveals a disconnect between premium pricing and actual claim behavior: while claim amounts remain fairly uniform across insurance types, premiums for Medicaid and Medicare are consistently two to three times higher than Private or Self-Pay premiums in every state, raising the question of whether current premium structures are closely tied to real claims risk.</em></p>
-      <p>
-        <a href="https://github.com/SharonBayela/Machine_learning_project_F26.git" target="_blank" rel="noopener">
-          View the code on GitHub
-        </a>
-      </p>
     </div>
+  </div>
 </main>
 <footer class="site-footer">
   <span>Sharon Bayela &middot; Machine Learning for Data Science &middot; Fall 2026</span>
