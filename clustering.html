@@ -35,10 +35,94 @@
   <div class="case-inner">
     <p class="eyebrow">Clustering</p>
     <h2 class="page-title">Clustering</h2>
-    <div class="placeholder">
-      <p class="eyebrow">Coming in a later module</p>
-      <p>This tab will group policyholders or claims into clusters based on shared characteristics, to see whether natural risk segments emerge from the data.</p>
-    </div>
+
+    <!-- OVERVIEW -->
+    <section id="overview" class="content-section">
+      <h3>Overview</h3>
+
+      <p>Clustering is an unsupervised machine learning method, meaning it doesn't rely on a labeled outcome like <code>Is_Fraud</code>. Instead, it groups data points together based purely on how similar they are to each other across a set of features. For this project, clustering offers a way to explore the claims data without assuming anything about fraud or cost in advance, letting natural groupings emerge on their own rather than being defined ahead of time.</p>
+
+      <p>There are two broad families of clustering approaches used here. <strong>Partitional clustering</strong>, such as K-Means, works by splitting the data into a fixed number of non-overlapping groups, where each point is assigned to whichever cluster center it's closest to, and those centers are repeatedly recalculated until the groupings stabilize. <strong>Hierarchical clustering</strong>, on the other hand, builds a nested structure of groupings from the bottom up, starting with every point as its own tiny cluster and progressively merging the closest ones together until everything is connected, which can be visualized as a tree-like diagram called a dendrogram.</p>
+
+      <p>Distance is central to both approaches, since "similarity" has to be measured somehow. K-Means in this project uses standard <strong>Euclidean distance</strong>, the straight-line distance between two points in feature space, which is the default and most common choice for partitional clustering. The hierarchical clustering in this project instead uses <strong>cosine similarity</strong> (expressed as cosine distance), which measures the angle between two data points rather than the straight-line distance between them, making it more sensitive to the overall pattern or shape of a claim's features rather than their raw magnitude.</p>
+
+      <p>The goal of applying clustering here is discovery rather than prediction. Since this project's core idea is that claim severity and claim frequency behave differently, clustering offers a way to check whether claims naturally separate into distinct groups, such as high-cost/low-frequency versus low-cost/high-frequency, without being told to do so. Once clusters are formed, they can also be compared against information that wasn't used to create them, like <code>Insurance_Type</code> or fraud rate, to see if any of the naturally discovered groups line up with patterns already explored in the EDA stage.</p>
+
+      <figure>
+        <img src="images/kmeans-partitional.png" alt="Illustration of partitional clustering (K-Means) showing points assigned to the nearest of several cluster centers marked with an X">
+        <figcaption><strong>Figure: Partitional Clustering (K-Means).</strong> This illustration shows how partitional clustering works conceptually: every point is assigned to the nearest of several fixed cluster centers (marked with an X), producing clean, non-overlapping groups.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/hierarchical-dendrogram.png" alt="Dendrogram illustrating hierarchical clustering, with points merged step by step by cosine distance">
+        <figcaption><strong>Figure: Hierarchical Clustering (Dendrogram).</strong> This illustration shows the tree-like structure hierarchical clustering produces, where individual points are merged step by step based on their cosine distance from one another, with the height of each merge reflecting how dissimilar the merged groups were.</figcaption>
+      </figure>
+    </section>
+
+    <!-- DATA PREP -->
+    <section id="data-prep" class="content-section">
+      <h3>Data Preparation</h3>
+
+      <p>Clustering requires only unlabeled, numeric data, since distance-based algorithms like K-Means and hierarchical clustering can't interpret text categories or a target label the way a model like Naive Bayes or Decision Trees can. For this reason, columns like <code>Insurance_Type</code>, <code>State</code>, <code>Claim_Status</code>, and <code>Is_Fraud</code> were excluded from the clustering input entirely, even though they're useful elsewhere in the project. What remains is a purely numeric subset of the data: <code>Claim_Amount</code>, <code>Approved_Amount</code>, <code>Patient_Age</code>, <code>Number_of_Claims_Per_Provider_Monthly</code>, <code>Days_Between_Service_and_Claim</code>, <code>Length_of_Stay</code>, <code>Prior_Visits_12m</code>, and <code>Premiums</code>.</p>
+
+      <p>Before clustering, every feature was also standardized (scaled to have a mean of 0 and a standard deviation of 1), since features like <code>Claim_Amount</code> and <code>Patient_Age</code> sit on very different numeric scales, and an unscaled distance calculation would let the larger-scale features dominate the result.</p>
+
+      <p>Link to the clustering-ready sample data (CSV): <a href="data/clustering_data.csv" download>clustering_data.csv</a></p>
+
+      <figure>
+        <img src="images/clustering-data-sample.png" alt="Sample of the final numeric dataset used for K-Means and hierarchical clustering, with no labels or categorical columns">
+        <figcaption><strong>Figure: Clustering-Ready Data Sample.</strong> This image shows a small sample of the final numeric dataset used for both K-Means and hierarchical clustering, with no labels or categorical columns included, exactly the kind of input these algorithms require.</figcaption>
+      </figure>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="results" class="content-section">
+      <h3>Results</h3>
+
+      <p>K-Means clustering was tested across a wide range of k values, from k = 2 through k = 19, to compare how the clustering structure changed as the number of groups increased. This satisfies testing well beyond the minimum of three values, and the full range is visible in both the elbow chart and the silhouette chart below.</p>
+
+      <figure>
+        <img src="images/elbow-method.png" alt="Line chart of K-Means inertia against k from 2 to 19, showing a smooth decline with no sharp elbow">
+        <figcaption><strong>Figure: Elbow Method for Choosing k.</strong> This chart plots inertia against k, showing a smooth, gradually declining curve with no single sharp "elbow" bend. Inertia drops quickly between k = 2 and k = 5, then continues to decline more slowly from there, which suggests that while adding more clusters keeps tightening the groupings somewhat, there isn't one obvious natural stopping point where the benefit clearly drops off.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/silhouette-scores.png" alt="Chart of silhouette scores for k from 2 to 19, peaking at k = 2 with a smaller secondary peak at k = 4">
+        <figcaption><strong>Figure: Silhouette Scores for Different Values of k.</strong> This is the more decisive result of the two. The highest silhouette score by a clear margin occurs at k = 2, scoring around 0.22, noticeably higher than every other value tested. After that, scores drop sharply at k = 3, then rise slightly to a small secondary peak at k = 4 (around 0.138), before gradually declining and flattening out for all larger values of k. This tells us the Silhouette method's honest recommendation is k = 2, meaning the data separates most cleanly into just two broad groups, with k = 4 representing a smaller, secondary local peak rather than the actual best choice.</figcaption>
+      </figure>
+
+      <p>This is worth being upfront about: k = 4 was the value used earlier in this project for the main K-Means and hierarchical comparison, but the Silhouette method is telling us that wasn't actually the best-separated choice, just a reasonable local option. This is a legitimate and common outcome in real clustering work, not a mistake, and it's worth reporting plainly rather than reworking the results to force an agreement that isn't really there.</p>
+
+      <p>At k = 4, the final K-Means solution produced four clusters of sizes 3,998, 3,901, 1,331, and 770. Two large, similarly sized clusters account for the majority of the data, while two smaller clusters capture a meaningfully smaller subset.</p>
+
+      <figure>
+        <img src="images/kmeans-clusters-scatter.png" alt="Scatter plot of the four K-Means clusters on scaled Claim Amount and Approved Amount, with one red cluster at higher amounts">
+        <figcaption><strong>Figure: K-Means Clusters (Claim Amount vs. Approved Amount, scaled).</strong> This scatter plot shows the four clusters plotted along scaled Claim Amount and Approved Amount. Visually, the separation is fairly subtle. One cluster (shown in red) captures claims with higher amounts, which pulls apart cleanly from the dense lower-value region, while the remaining three clusters overlap heavily within that lower-value cluster, which is consistent with the modest silhouette scores seen at k = 4, since a lower score reflects exactly this kind of overlapping, less distinct boundary between groups.</figcaption>
+      </figure>
+
+      <p>Hierarchical clustering was then applied using cosine distance as the similarity measure, first visualized on a 40-point sample to keep the dendrogram readable.</p>
+
+      <figure>
+        <img src="images/dendrogram-cosine-40.png" alt="Dendrogram of a 40-point sample using cosine distance, with six color-coded branches">
+        <figcaption><strong>Figure: Hierarchical Clustering Dendrogram (Cosine Distance, 40-point sample).</strong> The dendrogram's default color-cut splits the sample into six visually distinct branches, which actually leans closer to suggesting more natural substructure than either the elbow or silhouette results pointed to for K-Means. This is a reasonable and expected difference, since hierarchical clustering is measuring similarity based on the angle between each claim's feature values (cosine distance), rather than straight-line distance (Euclidean), so it's picking up on a different kind of pattern in the same underlying data.</figcaption>
+      </figure>
+
+      <p>When hierarchical clustering was applied to the full dataset using k = 4, to allow a direct comparison with the K-Means result, it produced cluster sizes of 4,903, 2,277, 2,108, and 712. Comparing the two methods at the same k, both agree on a similar overall shape: one noticeably larger cluster, two mid-sized clusters, and one consistently smaller cluster sitting around 700&ndash;800 points. That smallest cluster showing up independently in both methods, despite using entirely different distance metrics, is the strongest point of agreement between the two approaches, and suggests that subgroup of claims genuinely stands apart from the rest of the data in some meaningful way.</p>
+
+      <p>Where the two methods diverge is in how many clusters they'd naturally suggest if left to choose on their own: the Silhouette method points toward k = 2 as the strongest overall fit for K-Means, while the dendrogram's natural branching suggests something closer to 6 for hierarchical clustering. This disagreement itself is a meaningful result, not a contradiction to resolve, since it reflects the two methods measuring similarity in fundamentally different ways on data that, as the earlier correlation heatmap showed, doesn't have strong, clean relationships between its numeric features to begin with.</p>
+    </section>
+
+    <!-- CONCLUSIONS -->
+    <section id="conclusions" class="content-section">
+      <h3>Conclusions</h3>
+
+      <p>The Silhouette method was used, tested across every value of k from 2 to 19, and it pointed clearly to k = 2 as the best-separated choice, with k = 4 only standing out as a smaller secondary option.</p>
+
+      <p>What this clustering work reveals about the project's core topic is more nuanced than a clean story of "claims naturally fall into four risk tiers." Instead, the evidence across K-Means, hierarchical clustering, the elbow method, and the silhouette method all points toward a dataset where claims mostly resemble one another, with the clearest, most defensible split being a broad two-group division rather than several sharply distinct categories. At the same time, both clustering methods consistently identified one smaller subgroup of a few hundred claims that stood apart from the rest, independent of which distance metric was used, which is a meaningful signal worth investigating further, possibly by checking whether that smaller cluster overlaps with claims already flagged as fraudulent, or with a particular insurance type or claim type.</p>
+
+      <p>This result reinforces something already observed in the EDA stage, where the correlation heatmap showed weak relationships between most numeric features. If the underlying features don't strongly relate to one another, it makes sense that clustering wouldn't uncover many sharply separated groups either, since clustering, like correlation, depends on real structure existing in the data to find. Rather than undermining the project, this is a legitimate and honest finding: claim severity and frequency in this dataset don't appear to be driven by a small number of clean, separable categories, which supports the broader argument that more detailed, feature-level modeling, like the regression and ensemble methods planned later in this project, may be better suited to capturing risk than a simple clustering-based segmentation would be on its own.</p>
+    </section>
+
   </div>
 </main>
 <footer class="site-footer">
