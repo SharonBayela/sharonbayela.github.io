@@ -49,12 +49,12 @@
       <p>The goal of applying clustering here is discovery rather than prediction. Since this project's core idea is that claim severity and claim frequency behave differently, clustering offers a way to check whether claims naturally separate into distinct groups, such as high-cost/low-frequency versus low-cost/high-frequency, without being told to do so. Once clusters are formed, they can also be compared against information that wasn't used to create them, like <code>Insurance_Type</code> or fraud rate, to see if any of the naturally discovered groups line up with patterns already explored in the EDA stage.</p>
 
       <figure>
-        <img src="partitional_clustering_example.png" alt="Illustration of partitional clustering (K-Means) showing points assigned to the nearest of several cluster centers marked with an X">
+        <img src="partitional_clustering_example.png" alt="Illustration of partitional clustering (K-Means) showing points assigned to the nearest of several cluster centers marked with an X" style="width:100%; height:auto; display:block;">
         <figcaption><strong>Figure: Partitional Clustering (K-Means).</strong> This illustration shows how partitional clustering works conceptually: every point is assigned to the nearest of several fixed cluster centers (marked with an X), producing clean, non-overlapping groups.</figcaption>
       </figure>
 
       <figure>
-        <img src="hierarchical_clustering_example.png" alt="Dendrogram illustrating hierarchical clustering, with points merged step by step by cosine distance">
+        <img src="hierarchical_clustering_example.png" alt="Dendrogram illustrating hierarchical clustering, with points merged step by step by cosine distance" style="width:100%; height:auto; display:block;">
         <figcaption><strong>Figure: Hierarchical Clustering (Dendrogram).</strong> This illustration shows the tree-like structure hierarchical clustering produces, where individual points are merged step by step based on their cosine distance from one another, with the height of each merge reflecting how dissimilar the merged groups were.</figcaption>
       </figure>
     </section>
@@ -70,7 +70,7 @@
       <p>Link to the clustering-ready sample data (CSV): <a href="clustering_results.csv" download>clustering_data.csv</a></p>
 
       <figure>
-        <img src="clustering_data_sample.png" alt="Sample of the final numeric dataset used for K-Means and hierarchical clustering, with no labels or categorical columns">
+        <img src="clustering_data_sample.png" alt="Sample of the final numeric dataset used for K-Means and hierarchical clustering, with no labels or categorical columns" style="width:100%; height:auto; display:block;">
         <figcaption><strong>Figure: Clustering-Ready Data Sample.</strong> This image shows a small sample of the final numeric dataset used for both K-Means and hierarchical clustering, with no labels or categorical columns included, exactly the kind of input these algorithms require.</figcaption>
       </figure>
     </section>
@@ -82,12 +82,12 @@
       <p>K-Means clustering was tested across a wide range of k values, from k = 2 through k = 19, to compare how the clustering structure changed as the number of groups increased. This satisfies testing well beyond the minimum of three values, and the full range is visible in both the elbow chart and the silhouette chart below.</p>
 
       <figure>
-        <img src="kmeans_elbow.png" alt="Line chart of K-Means inertia against k from 2 to 19, showing a smooth decline with no sharp elbow">
+        <img src="kmeans_elbow.png" alt="Line chart of K-Means inertia against k from 2 to 19, showing a smooth decline with no sharp elbow" style="width:100%; height:auto; display:block;">
         <figcaption><strong>Figure: Elbow Method for Choosing k.</strong> This chart plots inertia against k, showing a smooth, gradually declining curve with no single sharp "elbow" bend. Inertia drops quickly between k = 2 and k = 5, then continues to decline more slowly from there, which suggests that while adding more clusters keeps tightening the groupings somewhat, there isn't one obvious natural stopping point where the benefit clearly drops off.</figcaption>
       </figure>
 
       <figure>
-        <img src="silhouette_scores.png" alt="Chart of silhouette scores for k from 2 to 19, peaking at k = 2 with a smaller secondary peak at k = 4">
+        <img src="silhouette_scores.png" alt="Chart of silhouette scores for k from 2 to 19, peaking at k = 2 with a smaller secondary peak at k = 4" style="width:100%; height:auto; display:block;">
         <figcaption><strong>Figure: Silhouette Scores for Different Values of k.</strong> This is the more decisive result of the two. The highest silhouette score by a clear margin occurs at k = 2, scoring around 0.22, noticeably higher than every other value tested. After that, scores drop sharply at k = 3, then rise slightly to a small secondary peak at k = 4 (around 0.138), before gradually declining and flattening out for all larger values of k. This tells us the Silhouette method's honest recommendation is k = 2, meaning the data separates most cleanly into just two broad groups, with k = 4 representing a smaller, secondary local peak rather than the actual best choice.</figcaption>
       </figure>
 
@@ -96,14 +96,14 @@
       <p>At k = 4, the final K-Means solution produced four clusters of sizes 3,998, 3,901, 1,331, and 770. Two large, similarly sized clusters account for the majority of the data, while two smaller clusters capture a meaningfully smaller subset.</p>
 
       <figure>
-        <img src="kmeans_clusters.png" alt="Scatter plot of the four K-Means clusters on scaled Claim Amount and Approved Amount, with one red cluster at higher amounts">
+        <img src="kmeans_clusters.png" alt="Scatter plot of the four K-Means clusters on scaled Claim Amount and Approved Amount, with one red cluster at higher amounts" style="width:100%; height:auto; display:block;">
         <figcaption><strong>Figure: K-Means Clusters (Claim Amount vs. Approved Amount, scaled).</strong> This scatter plot shows the four clusters plotted along scaled Claim Amount and Approved Amount. Visually, the separation is fairly subtle. One cluster (shown in red) captures claims with higher amounts, which pulls apart cleanly from the dense lower-value region, while the remaining three clusters overlap heavily within that lower-value cluster, which is consistent with the modest silhouette scores seen at k = 4, since a lower score reflects exactly this kind of overlapping, less distinct boundary between groups.</figcaption>
       </figure>
 
       <p>Hierarchical clustering was then applied using cosine distance as the similarity measure, first visualized on a 40-point sample to keep the dendrogram readable.</p>
 
       <figure>
-        <img src="hierarchical_dendrogram.png" alt="Dendrogram of a 40-point sample using cosine distance, with six color-coded branches">
+        <img src="hierarchical_dendrogram.png" alt="Dendrogram of a 40-point sample using cosine distance, with six color-coded branches" style="width:100%; height:auto; display:block;">
         <figcaption><strong>Figure: Hierarchical Clustering Dendrogram (Cosine Distance, 40-point sample).</strong> The dendrogram's default color-cut splits the sample into six visually distinct branches, which actually leans closer to suggesting more natural substructure than either the elbow or silhouette results pointed to for K-Means. This is a reasonable and expected difference, since hierarchical clustering is measuring similarity based on the angle between each claim's feature values (cosine distance), rather than straight-line distance (Euclidean), so it's picking up on a different kind of pattern in the same underlying data.</figcaption>
       </figure>
 
