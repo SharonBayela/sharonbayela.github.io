@@ -25,7 +25,15 @@
 }
 
 * { box-sizing: border-box; }
+/* ---------- Global overflow guard ---------- */
 
+img, svg, video, table, figure {
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+}
 html {
   scroll-behavior: smooth;
 }
