@@ -35,10 +35,101 @@
   <div class="case-inner">
     <p class="eyebrow">Principal Component Analysis</p>
     <h2 class="page-title">Principal Component Analysis</h2>
-    <div class="placeholder">
-      <p class="eyebrow">Coming in a later module</p>
-      <p>This tab will use PCA to reduce the claims dataset to its most important underlying dimensions and visualize how records relate to one another.</p>
-    </div>
+
+    <!-- OVERVIEW -->
+    <section id="overview" class="content-section">
+      <h3>Overview</h3>
+
+      <p>Principal Component Analysis, or PCA, is a technique used to simplify a dataset that has many numeric features by transforming it into a smaller set of new, artificial features called principal components, while still preserving as much of the original information, or variance, as possible. Rather than simply dropping columns, PCA creates entirely new variables, each one a specific weighted combination of the original features, ranked so that the first component captures the most variation in the data, the second captures the next most, and so on.</p>
+
+      <p>At the heart of how PCA works are two mathematical concepts: eigenvalues and eigenvectors. When PCA looks at how all the features in a dataset vary together, it's essentially looking at the relationships between every pair of features at once. An eigenvector represents a specific direction through that feature space, and the matching eigenvalue tells you how much of the data's total variation stretches out along that particular direction. PCA works by finding the eigenvector with the largest eigenvalue first, since that direction captures the most spread in the data, and that becomes the first principal component. The process then repeats for the next largest eigenvalue, and the next, each one perpendicular to the ones before it, until every bit of the original variation has been accounted for in a new, reordered set of directions.</p>
+
+      <p>This process is what's known as dimensionality reduction, the act of taking a dataset with many features and representing it using fewer dimensions without losing much of the meaningful information it contains. Reducing dimensionality matters for a few practical reasons. High-dimensional data, meaning a dataset with many columns, is genuinely harder to analyze and visualize. A human being can easily look at a 2D scatter plot or even a 3D plot, but there's no way to directly visualize eight or more dimensions at once. High-dimensional data can also suffer from something often called the curse of dimensionality, where relationships between points become harder for models to detect simply because there's so much space for the data to spread out into, and features can become redundant or correlated with one another in ways that make models less stable or harder to interpret. By reducing many original features down to a small number of principal components, PCA makes it possible to visualize complex, multi-feature data in a simple 2D or 3D plot, while also potentially simplifying the input going into other models.</p>
+
+      <figure>
+        <img src="eigenvectors_toy_example.png" alt="Illustration of eigenvectors as directions of maximum variance on a two-feature toy dataset, with red arrows showing the first and second principal components" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Eigenvectors as Directions of Maximum Variance.</strong> This illustration uses a simple two-feature toy dataset to show what an eigenvector actually represents. The red arrows point in the two directions of greatest spread in the data, the longer arrow showing the first principal component, the main direction the data varies along, and the shorter, perpendicular arrow showing the second.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="scree_plot.png" alt="Scree plot showing variance explained by each principal component individually as green bars and cumulatively as a red line" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Scree Plot &mdash; Variance Explained by Each Component.</strong> This chart shows how much of the total variance in this project's actual claims data is captured by each principal component individually (green bars) and cumulatively (red line). This is the chart used later in this tab to judge how much dimensionality reduction is realistically possible for this particular dataset.</figcaption>
+      </figure>
+    </section>
+
+    <!-- DATA PREP -->
+    <section id="data-prep" class="content-section">
+      <h3>Data Prep</h3>
+
+      <p>Like clustering, PCA requires numeric, unlabeled data, since it works by calculating variance and covariance across features, calculations that only make sense for numbers, not categories or text labels. Columns like <code>Insurance_Type</code>, <code>State</code>, and <code>Is_Fraud</code> were excluded from this input for the same reason they were excluded from clustering: PCA has no way to mathematically interpret a category the way it can interpret a number.</p>
+
+      <p>The same numeric feature set used for clustering was reused here: <code>Claim_Amount</code>, <code>Approved_Amount</code>, <code>Patient_Age</code>, <code>Number_of_Claims_Per_Provider_Monthly</code>, <code>Days_Between_Service_and_Claim</code>, <code>Length_of_Stay</code>, <code>Prior_Visits_12m</code>, and <code>Premiums</code>. As with clustering, every feature was standardized before running PCA, since PCA is highly sensitive to scale, a feature with a larger numeric range would otherwise dominate the calculation of variance even if it isn't actually more important.</p>
+
+      <p>Link to the PCA-ready sample data (CSV): <a href="pca_data.csv" download>pca_data.csv</a></p>
+
+      <figure>
+        <img src="pca_data_sample.png" alt="Sample of the final numeric dataset used for PCA, with no labels or categorical columns" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: PCA-Ready Data Sample.</strong> This image shows a small sample of the final numeric dataset used for PCA, containing no labels or categorical columns, exactly the kind of input PCA requires.</figcaption>
+      </figure>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="results" class="content-section">
+      <h3>Results</h3>
+
+      <p>Running PCA on the scaled numeric claims data produced the results shown in the scree plot and 2D scatter plot already generated earlier in this tab. The first principal component (PC1) captured about 27.4% of the total variance, and the second (PC2) captured about 13.4%, meaning the first two components together account for only around 41% of the information in the original 8 features. The scatter plot of claims projected onto PC1 and PC2 shows one dense, heavily overlapping cluster of points near the origin, with a long, thin tail of outlier claims stretching out along the PC1 axis.</p>
+
+      <figure>
+        <img src="pca_scatter_pc1_pc2.png" alt="2D scatter plot of claims projected onto PC1 and PC2, showing a dense overlapping cluster near the origin with a thin tail of outliers along PC1" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Claims Projected onto PC1 and PC2.</strong> The scatter plot of claims projected onto PC1 and PC2 shows one dense, heavily overlapping cluster of points near the origin, with a long, thin tail of outlier claims stretching out along the PC1 axis.</figcaption>
+      </figure>
+
+      <p>Beyond just plotting the claims themselves, it's also useful to understand what each principal component actually represents in terms of the original variables. This is done by looking at each component's loadings, the weight each original feature contributes to that component.</p>
+
+      <figure>
+        <img src="pca_feature_loadings.png" alt="Bar charts of feature loadings on PC1 and PC2, with PC1 dominated by cost variables and PC2 dominated by frequency and timing variables" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Feature Contributions to PC1 and PC2.</strong> This pair of bar charts shows the loading value of every original feature on PC1 (left) and PC2 (right). PC1 is almost entirely driven by <code>Claim_Amount</code>, <code>Approved_Amount</code>, and <code>Premiums</code>, the dollar-based cost variables, while every other feature contributes only marginally. PC2 tells a different story, dominated instead by <code>Number_of_Claims_Per_Provider_Monthly</code> (positive direction) and <code>Days_Between_Service_and_Claim</code> (negative direction), with <code>Patient_Age</code> playing a smaller secondary role. This is a genuinely clean and interpretable split: PC1 behaves like a &ldquo;cost&rdquo; axis, and PC2 behaves like a &ldquo;frequency and timing&rdquo; axis, two concepts that map almost directly onto this project's central theme of claim severity versus claim frequency.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="pca_biplot.png" alt="PCA biplot overlaying feature direction arrows on claims data projected onto PC1 and PC2" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: PCA Biplot.</strong> This biplot overlays the direction and strength of each original feature (red arrows) on top of the same claims data projected onto PC1 and PC2. The three cost-related arrows (<code>Claim_Amount</code>, <code>Approved_Amount</code>, <code>Premiums</code>) all point in a tightly clustered direction along PC1, confirming they move together and are essentially measuring the same underlying idea. Meanwhile, <code>Number_of_Claims_Per_Provider_Monthly</code> and <code>Days_Between_Service_and_Claim</code> point in nearly opposite directions along PC2, showing those two features pull the data apart in a completely different way than the cost variables do.</figcaption>
+      </figure>
+    </section>
+
+    <!-- CONCLUSIONS -->
+    <section id="conclusions" class="content-section">
+      <h3>Conclusions</h3>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Explained Variance by Principal Component</caption>
+          <thead>
+            <tr>
+              <th>Principal Component</th>
+              <th>Variance Explained</th>
+              <th>Cumulative Variance Explained</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>PC1</td><td>27.37%</td><td>27.37%</td></tr>
+            <tr><td>PC2</td><td>13.37%</td><td>41.05%</td></tr>
+            <tr><td>PC3</td><td>12.80%</td><td>53.54%</td></tr>
+            <tr><td>PC4</td><td>12.63%</td><td>66.18%</td></tr>
+            <tr><td>PC5</td><td>12.41%</td><td>78.59%</td></tr>
+            <tr><td>PC6</td><td>11.72%</td><td>90.30%</td></tr>
+            <tr><td>PC7</td><td>8.98%</td><td>99.29%</td></tr>
+            <tr><td>PC8</td><td>0.71%</td><td>100.00%</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Explained Variance by Principal Component.</strong></figcaption>
+      </figure>
+
+      <p>What this PCA work reveals, in the context of this project, is genuinely informative in two different ways. First, the loadings themselves confirm something this project has been building toward all along: the numeric features in this dataset really do separate cleanly into a cost-related group (<code>Claim_Amount</code>, <code>Approved_Amount</code>, <code>Premiums</code>) and a frequency/timing-related group (<code>Number_of_Claims_Per_Provider_Monthly</code>, <code>Days_Between_Service_and_Claim</code>), and PCA found that distinction entirely on its own, without being told anything about severity or frequency in advance. That's a meaningful, data-driven confirmation of this project's central framing.</p>
+
+      <p>Second, and just as important to report honestly, PCA did not meaningfully reduce the dimensionality of this dataset. It took all 8 components combined to reach 100% of the variance, with no small handful of components capturing the bulk of it, each component after the first contributing a fairly similar, modest share. This lines up directly with the weak correlations seen earlier in this project's EDA correlation heatmap: PCA compresses data well when features are redundant or correlated with one another, and since these features mostly aren't, there wasn't much redundancy for PCA to compress in the first place. Rather than being a disappointing result, this is a legitimate and useful finding, it suggests that each of these 8 features is carrying genuinely distinct, non-overlapping information, which actually supports the case for keeping the full feature set intact for the regression and ensemble modeling planned later in this project, rather than trying to simplify it down to just one or two components first.</p>
+    </section>
+
   </div>
 </main>
 <footer class="site-footer">
