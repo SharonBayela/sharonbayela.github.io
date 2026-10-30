@@ -36,10 +36,286 @@
   <div class="case-inner">
     <p class="eyebrow">DecTrees</p>
     <h2 class="page-title">Decision Trees</h2>
-    <div class="placeholder">
-      <p class="eyebrow">Coming in a later module</p>
-      <p>This tab will build decision tree models to classify or explain claim outcomes and to surface which factors matter most.</p>
-    </div>
+
+    <!-- OVERVIEW -->
+    <section id="overview" class="content-section">
+      <h3>Overview</h3>
+
+      <p>A decision tree is a supervised machine learning algorithm used for classification and regression. It works by repeatedly dividing observations into smaller, more homogeneous groups based on the values of predictor variables, and each division is expressed as a simple yes-or-no question about one variable. A tree consists of a root node (the first question, applied to all observations), decision nodes (further questions), branches (the answers), and terminal leaf nodes, which give the predicted class or value. Because the path from the root to a leaf is a readable sequence of rules, decision trees are among the most interpretable models in machine learning.</p>
+
+      <figure>
+        <img src="images/dt_example_tree.png" alt="Illustrative decision tree for classifying insurance claim risk" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Illustrative Decision Tree.</strong> This diagram shows the parts of a tree (root node, decision nodes, branches, and leaves) for classifying insurance claim risk. The thresholds are hypothetical and are not fitted results from the dataset.</figcaption>
+      </figure>
+
+      <p>Decision trees can be used for classification (for example, labeling a claim as fraudulent or legitimate), for regression (for example, predicting a claim amount), for segmenting customers into risk groups, and for identifying which variables matter most. For insurance claims, a tree can reveal relationships among claim amounts, patient characteristics, insurance types, provider characteristics, and claim outcomes, and its rules can be turned directly into screening or pricing tiers. In this project the target variable is <code>Is_Fraud</code>, so the tree is used for fraud classification, a supplementary risk question alongside the project's main focus on claim frequency, severity, and pricing.</p>
+
+      <h4>Gini Impurity, Entropy, and Information Gain</h4>
+
+      <p>At every node the algorithm must decide which variable and which threshold give the best split. It does so with an impurity measure, which scores how mixed the classes are inside a node. A node containing only one class is pure and has an impurity of zero. The two most common measures are Gini impurity and entropy.</p>
+
+      <p style="text-align:center; font-size:1.1rem;"><strong>Gini = 1 &minus; &Sigma; p<sub>k</sub><sup>2</sup></strong> &nbsp;&nbsp;&nbsp;&nbsp; <strong>Entropy = &minus;&Sigma; p<sub>k</sub> log<sub>2</sub>(p<sub>k</sub>)</strong></p>
+
+      <p>Here p<sub>k</sub> is the proportion of observations in the node that belong to class k. Gini impurity measures the probability that a randomly chosen observation would be misclassified if it were labeled at random according to the node's class proportions. Entropy measures the uncertainty in the class distribution. For two classes, both are zero for a pure node and largest when the classes are evenly mixed, as the figure below shows. Gini is slightly cheaper to compute because it needs no logarithm, while entropy penalizes mixed nodes more heavily. In practice the two usually produce very similar trees.</p>
+
+      <figure>
+        <img src="images/dt_impurity_curves.png" alt="Gini impurity and entropy as a function of the fraud proportion" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Gini Impurity and Entropy for a Two-Class Node.</strong> Both measures are zero when a node is pure and highest when the classes are evenly mixed (50% fraud). The marked point is the parent node of the worked example below, which has 40% fraud.</figcaption>
+      </figure>
+
+      <p>Impurity alone describes one node. To judge a split, the algorithm compares the parent node with the child nodes it produces. Information gain is the reduction in impurity from the split: the parent's impurity minus the size-weighted average impurity of the children. The tree evaluates many candidate splits and keeps the one with the largest gain. With Gini the same quantity is called the Gini gain. Splitting continues until a stopping rule is met, such as a maximum depth, a minimum leaf size, or no further gain.</p>
+
+      <p style="text-align:center; font-size:1.1rem;"><strong>Information Gain = Impurity(parent) &minus; &Sigma; (n<sub>j</sub> / n) &times; Impurity(child<sub>j</sub>)</strong></p>
+
+      <h4>Worked Example</h4>
+
+      <p>Suppose 10 insurance claims contain 4 fraudulent and 6 legitimate claims, and a proposed split produces two groups: Child A with 3 fraudulent and 1 legitimate claim, and Child B with 1 fraudulent and 5 legitimate claims.</p>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Evaluating a Proposed Split with Entropy and Gini</caption>
+          <thead>
+            <tr>
+              <th>Node</th>
+              <th>Fraud</th>
+              <th>Legitimate</th>
+              <th>Entropy</th>
+              <th>Gini</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Parent (n = 10)</td><td>4</td><td>6</td><td>0.971</td><td>0.480</td></tr>
+            <tr><td>Child A (n = 4)</td><td>3</td><td>1</td><td>0.811</td><td>0.375</td></tr>
+            <tr><td>Child B (n = 6)</td><td>1</td><td>5</td><td>0.650</td><td>0.278</td></tr>
+            <tr><td>Weighted average of children</td><td></td><td></td><td>0.715</td><td>0.317</td></tr>
+            <tr><td><strong>Information gain</strong></td><td></td><td></td><td><strong>0.256 bits</strong></td><td><strong>0.163</strong></td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Worked Split Example.</strong> The parent entropy is &minus;0.4 log<sub>2</sub>(0.4) &minus; 0.6 log<sub>2</sub>(0.6) = 0.971. The weighted child entropy is 0.4(0.811) + 0.6(0.650) = 0.715, so the information gain is 0.971 &minus; 0.715 = 0.256 bits. With Gini, the parent is 1 &minus; (0.4<sup>2</sup> + 0.6<sup>2</sup>) = 0.480, the weighted child impurity is 0.4(0.375) + 0.6(0.278) = 0.317, and the Gini gain is 0.163.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/dt_entropy_split.png" alt="A split separating claims into more homogeneous groups and reducing entropy" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: A Split That Reduces Entropy.</strong> The split separates the 10 claims into groups that are more homogeneous than the parent, lowering the weighted entropy from 0.971 to 0.715. A competing split with a higher information gain would be preferred.</figcaption>
+      </figure>
+
+      <h4>Why So Many Trees Are Possible</h4>
+
+      <p>In theory an unlimited number of different trees can be built from the same data. Different variables can be chosen at each node, the same variable can be reused at deeper levels, and the order of the splits can change. For a continuous predictor such as claim amount, the threshold can be any real number, and infinitely many real numbers lie between any two observed values, so there are infinitely many possible questions. A tree can also be grown to any depth, since every leaf can be split again. Different training samples and different stopping rules give still other trees. For a fixed, finite dataset, however, thresholds that fall between the same two neighboring observations produce the same partition, so the number of distinct partitions of the training records is finite, though extremely large. Because the tree is chosen greedily one split at a time, the final tree is also not guaranteed to be the best of all possible trees. This is why depth limits, minimum leaf sizes, pruning, and cross-validation are used to control complexity and prevent overfitting, where a tree memorizes the training data and performs worse on new claims.</p>
+    </section>
+
+    <!-- DATA PREP -->
+    <section id="data-prep" class="content-section">
+      <h3>Data Prep</h3>
+
+      <p>Supervised methods learn from examples whose correct answers are already known, so they can be built only from labeled data. Each claim must have a known class label, which the model learns to predict from the other variables. Rows without a label cannot be used for training or for testing. The analysis uses the health insurance claims dataset of 10,000 observations and 23 variables, with <code>Is_Fraud</code> supplying the known labels (0 for a legitimate claim and 1 for a fraudulent claim). The classes are imbalanced: 9,171 claims (91.71%) are legitimate and 829 (8.29%) are fraudulent.</p>
+
+      <p>Link to the labeled sample data (CSV): <a href="data/dt_sample_data.csv" download>dt_sample_data.csv</a></p>
+
+      <figure>
+        <img src="images/dt_data_sample.png" alt="Sample of the labeled insurance claims dataset" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Labeled Claims Data Sample.</strong> This image shows a small sample of the labeled health insurance claims dataset used for the decision trees. The last column, <code>Is_Fraud</code>, is the known class label.</figcaption>
+      </figure>
+
+      <p>Fourteen predictors were selected: <code>Claim_Amount</code>, <code>Patient_Age</code>, <code>No_of_Claims_Provider</code>, <code>Service_Claim_days</code>, <code>Length_of_Stay</code>, <code>Prior_Visits_12m</code>, <code>Chronic_Condition_Flag</code>, <code>Insurance_Type</code>, <code>Patient_Gender</code>, <code>Provider_Specialty</code>, <code>Visit_Type</code>, <code>State</code>, <code>Diagnosis_Code</code>, and <code>Procedure_Code</code>. The target <code>Is_Fraud</code> was excluded from the predictors so the model never sees the outcome it is trying to predict. Decision trees choose their own split thresholds, so numeric variables were kept in their original units, with no scaling or binning. Categorical variables were converted to 0/1 indicator columns with one-hot encoding, producing 51 features. Missing categorical values were assigned an "Unknown" category, and missing numeric values were filled with medians calculated from the training set only.</p>
+
+      <h4>Training and Testing Sets</h4>
+
+      <p>The labeled data was divided into a training set, used to build the model and tune its settings, and a testing set, used once at the end to measure how accurately the model predicts claims it has never seen. The split was 80/20 using Scikit-learn's <code>train_test_split</code> with <code>random_state=42</code>, with stratified sampling so that the fraud proportion is nearly the same in both subsets. The split was done before any preparation step, so the fill values and encoded columns were learned from the training set alone, and the test features were then aligned to the training columns.</p>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Training and Testing Split</caption>
+          <thead>
+            <tr>
+              <th>Dataset</th>
+              <th>Observations</th>
+              <th>Legitimate</th>
+              <th>Fraudulent</th>
+              <th>Encoded Features</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Training</td><td>8,000</td><td>7,337</td><td>663</td><td>51</td></tr>
+            <tr><td>Testing</td><td>2,000</td><td>1,834</td><td>166</td><td>51</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Training and Testing Split.</strong></figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/dt_train_test_split.png" alt="80 percent training and 20 percent testing split" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: 80/20 Training and Testing Split.</strong> This illustration shows how the labeled data was divided into training and testing sets.</figcaption>
+      </figure>
+
+      <p>Links to the two sets (CSV): <a href="data/dt_training_set.csv" download>dt_training_set.csv</a> and <a href="data/dt_testing_set.csv" download>dt_testing_set.csv</a></p>
+
+      <p>The two sets must be disjoint, meaning no row appears in both, and the Python program confirmed that the number of shared row indices was zero. If the same claims were used for both training and testing, the model could simply memorize them, and the test would measure memory rather than the ability to generalize, producing misleadingly optimistic accuracy. A decision tree is especially prone to this, because an unrestricted tree can grow until it fits every training claim perfectly. Settings such as the splitting criterion, maximum depth, minimum leaf size, and pruning strength were chosen with five-fold cross-validation inside the training set, so the testing set influenced none of the modeling decisions.</p>
+
+      <figure>
+        <img src="images/dt_class_distribution.png" alt="Class distribution in training and testing sets" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Class Distribution Across Training and Testing Sets.</strong> Legitimate and fraudulent claims appear in nearly identical proportions in both subsets (about 8.3% fraud), confirming that stratification worked.</figcaption>
+      </figure>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="results" class="content-section">
+      <h3>Results</h3>
+
+      <p>The decision tree addresses the early fraud detection part of the research question: whether claim, provider, and patient characteristics follow patterns that separate fraudulent claims from legitimate ones, and whether those patterns can be expressed as readable rules. It does not model claim frequency, severity, or premiums directly. Three different trees were built and are compared below. Tree 1 is the tuned model, whose settings were chosen by five-fold cross-validation on the training set, scored by precision-recall AUC. It used the entropy criterion, a maximum depth of 8, a minimum of 50 observations per leaf, and no additional cost-complexity pruning, with a cross-validated PR-AUC of 0.754. All trees used balanced class weights so the rare fraud class was not ignored, and all were evaluated on the same testing set of 2,000 claims, made up of 1,834 legitimate and 166 fraudulent claims.</p>
+
+      <h4>Tree 1: Tuned Tree (Entropy, Depth 8)</h4>
+
+      <figure>
+        <img src="images/decision_tree.png" alt="Top levels of the tuned decision tree" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Tree 1, Top Four Levels.</strong> Only the first four levels of the depth-8 tree are drawn. The class counts in each node are weighted by the balanced class weights, so they do not equal raw claim counts. The root split on <code>Service_Claim_days</code> at 6.5 days sends every claim filed more than 6.5 days after service to a pure legitimate leaf, and claims filed within 1.5 days form a pure fraud leaf. Claims filed between 1.5 and 6.5 days are separated further by claim amount and provider claim count.</figcaption>
+      </figure>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Tree 1 Performance on the Test Set</caption>
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Accuracy</td><td>87.35%</td></tr>
+            <tr><td>ROC-AUC</td><td>0.966</td></tr>
+            <tr><td>PR-AUC (baseline 0.083)</td><td>0.761</td></tr>
+            <tr><td>Fraud Precision</td><td>39.10%</td></tr>
+            <tr><td>Fraud Recall</td><td>93.98%</td></tr>
+            <tr><td>Fraud F1-Score</td><td>0.552</td></tr>
+            <tr><td>Specificity (Legitimate Recall)</td><td>86.75%</td></tr>
+            <tr><td>False Positives</td><td>243</td></tr>
+            <tr><td>False Negatives</td><td>10</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Tree 1 Performance on the Test Set.</strong></figcaption>
+      </figure>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Tree 1 Confusion Matrix (Test Set, n = 2,000)</caption>
+          <thead>
+            <tr>
+              <th></th>
+              <th>Predicted Legitimate</th>
+              <th>Predicted Fraud</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Actual Legitimate</td><td>1,591</td><td>243</td><td>1,834</td></tr>
+            <tr><td>Actual Fraud</td><td>10</td><td>156</td><td>166</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Confusion Matrix.</strong> The tree correctly classified 1,591 legitimate and 156 fraudulent claims, flagged 243 legitimate claims as fraud, and missed 10 fraudulent claims.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/dt_confusion_matrix.png" alt="Decision tree confusion matrix, counts and normalized by true class" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Confusion Matrix.</strong> The left panel shows counts and the right panel shows rates within each true class. The tree identified 94% of fraudulent claims and 87% of legitimate claims correctly.</figcaption>
+      </figure>
+
+      <p>Accuracy alone is misleading here. A model that labeled every claim legitimate would be correct for 91.70% of claims and would detect no fraud, so the 87.35% accuracy of the tree is lower than that baseline because the model deliberately trades accuracy for fraud detection. The more informative measures are recall and precision. The tree caught 156 of the 166 fraudulent claims, but only 39.10% of the 399 flagged claims were truly fraudulent. That is still about 4.7 times the 8.3% fraud rate in the test set, so a flagged claim is far more likely to be fraudulent than a randomly chosen one.</p>
+
+      <figure>
+        <img src="images/dt_roc_curve.png" alt="ROC curve for the decision tree" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: ROC Curve.</strong> The tuned tree reached an AUC of 0.966, meaning a randomly chosen fraudulent claim receives a higher fraud score than a randomly chosen legitimate claim about 97% of the time.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/dt_pr_curve.png" alt="Precision-recall curve for the decision tree" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Precision-Recall Curve.</strong> The PR-AUC of 0.761 is about nine times the no-skill baseline of 0.083. Precision stays near 1.0 until about 35% of fraud is recovered and falls to about 0.4 as recall approaches 94%, which shows the trade-off between catching more fraud and reviewing more legitimate claims.</figcaption>
+      </figure>
+
+      <p>The tree was also examined to see which variables drive its predictions. Built-in importance can favor variables with many possible split points, so permutation importance, which measures how much the test PR-AUC falls when a variable is shuffled, was computed as a check. Both measures agree.</p>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Most Important Features (Tree 1)</caption>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Tree Importance</th>
+              <th>Permutation Importance (drop in PR-AUC)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Service_Claim_days</td><td>0.9062</td><td>0.6503</td></tr>
+            <tr><td>Claim_Amount</td><td>0.0652</td><td>0.1061</td></tr>
+            <tr><td>No_of_Claims_Provider</td><td>0.0168</td><td>0.0204</td></tr>
+            <tr><td>Length_of_Stay</td><td>0.0038</td><td>&mdash;</td></tr>
+            <tr><td>Diagnosis_Code: F41.9</td><td>0.0029</td><td>0.0008</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Most Important Features.</strong> Service-to-claim delay accounts for about 91% of the tree's importance, followed by claim amount and provider claim count. All other variables, including insurance type, state, gender, and procedure code, contributed almost nothing. These importances are descriptive and should not be read as evidence that any characteristic causes fraud.</figcaption>
+      </figure>
+
+      <h4>Tree 2: Shallow Tree (Gini, Depth 3)</h4>
+
+      <p>The second tree uses the Gini criterion and is limited to a depth of 3, so every rule can be read at a glance. It shows how much of the pattern a very simple tree can capture.</p>
+
+      <figure>
+        <img src="images/dt_tree_gini_depth3.png" alt="Shallow decision tree using the Gini criterion with depth 3" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Tree 2 (Gini, Depth 3).</strong> [FILL IN: one sentence naming the root split and the main rule this tree uses.]</figcaption>
+      </figure>
+
+      <h4>Tree 3: Tree Without Service_Claim_days (Entropy, Depth 4)</h4>
+
+      <p>Because <code>Service_Claim_days</code> dominates Tree 1, the third tree removes it and is limited to a depth of 4 with the entropy criterion. This tests whether the other claim characteristics carry fraud signal of their own.</p>
+
+      <figure>
+        <img src="images/dt_tree_no_service_days.png" alt="Decision tree built without the service-to-claim delay variable" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Tree 3 (Entropy, Depth 4, Without Service_Claim_days).</strong> [FILL IN: one sentence naming the root split and which variables replace the service-to-claim delay.]</figcaption>
+      </figure>
+
+      <h4>Comparing the Three Trees</h4>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Comparison of the Three Trees (Test Set)</caption>
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Tree 1: Entropy, Depth 8</th>
+              <th>Tree 2: Gini, Depth 3</th>
+              <th>Tree 3: No Service Days, Depth 4</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Accuracy</td><td>87.35%</td><td>[FILL IN]</td><td>[FILL IN]</td></tr>
+            <tr><td>ROC-AUC</td><td>0.966</td><td>[FILL IN]</td><td>[FILL IN]</td></tr>
+            <tr><td>PR-AUC</td><td>0.761</td><td>[FILL IN]</td><td>[FILL IN]</td></tr>
+            <tr><td>Fraud Precision</td><td>39.10%</td><td>[FILL IN]</td><td>[FILL IN]</td></tr>
+            <tr><td>Fraud Recall</td><td>93.98%</td><td>[FILL IN]</td><td>[FILL IN]</td></tr>
+            <tr><td>False Positives</td><td>243</td><td>[FILL IN]</td><td>[FILL IN]</td></tr>
+            <tr><td>False Negatives</td><td>10</td><td>[FILL IN]</td><td>[FILL IN]</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Comparison of the Three Trees.</strong> [FILL IN: one or two sentences on how simplifying the tree (Tree 2) and removing the service-to-claim delay (Tree 3) changed performance.]</figcaption>
+      </figure>
+
+      <p>For context, the Naive Bayes models on the previous tab reached an ROC-AUC of 0.962 and a PR-AUC of 0.682. Compared with them, the tuned tree produced fewer false alarms (243 versus 295) and a higher PR-AUC (0.761), while Naive Bayes missed fewer fraudulent claims (3 versus 10).</p>
+    </section>
+
+    <!-- CONCLUSIONS -->
+    <section id="conclusions" class="content-section">
+      <h3>Conclusions</h3>
+
+      <p>The decision trees show that fraudulent claims follow a predictable and readable pattern in this dataset. The tuned tree reached an ROC-AUC of 0.966 and a PR-AUC of 0.761, caught 156 of the 166 fraudulent claims, and ranked better than Naive Bayes on precision, accuracy, and PR-AUC. The pattern is dominated by timing: claims filed within about six days of service were far more likely to be fraudulent, and every claim filed later than 6.5 days was legitimate. Claim amount and the provider's claim count refined the decision for claims in the short-delay group. This supports the early fraud detection part of the research question, because all of these characteristics are available when a claim is submitted, and the splits translate directly into screening rules a claims reviewer can apply. [FILL IN: one sentence on what Trees 2 and 3 show, for example whether a depth-3 tree is nearly as accurate and whether other variables carry signal without the service-to-claim delay.]</p>
+
+      <p>Just as important to report honestly, the tuned tree flagged 243 legitimate claims as fraudulent, so fraud precision was only about 39% despite recall near 94%. Reviewing the roughly 20% of claims that were flagged (399 of 2,000) would capture about 94% of the fraud, which makes the tree better suited to prioritizing claims for review than to making final decisions. The result also depends heavily on a single variable, which suggests the rule is almost deterministic in this dataset. If the data is simulated or synthetic, that pattern is probably cleaner than in real claims, and the tree should be tested on real data before any operational use. In addition, the best maximum depth (8) was the largest value tried, the test set contains only 166 fraudulent claims, and a single tree can be unstable, so ensemble methods are the natural next comparison.</p>
+
+      <p>In terms of this project's central theme, fraud classification is related to but distinct from claim frequency and severity. These results do not directly estimate claim counts, claim amounts, or premiums. The tree's fraud scores could serve as an additional input to risk-based pricing, and its rules show which claim characteristics deserve attention, but modeling frequency and severity is left to the regression and boosting models later in this project.</p>
+    </section>
+    <p>
+      <a href="https://github.com/SharonBayela/Machine_learning_project_F26.git" target="_blank" rel="noopener">
+          View the code on GitHub
+      </a>
+    </p>
   </div>
 </main>
 <footer class="site-footer">
