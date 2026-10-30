@@ -252,50 +252,6 @@
         <figcaption><strong>Table: Most Important Features.</strong> Service-to-claim delay accounts for about 91% of the tree's importance, followed by claim amount and provider claim count. All other variables, including insurance type, state, gender, and procedure code, contributed almost nothing. These importances are descriptive and should not be read as evidence that any characteristic causes fraud.</figcaption>
       </figure>
 
-      <h4>Tree 2: Shallow Tree (Gini, Depth 3)</h4>
-
-      <p>The second tree uses the Gini criterion and is limited to a depth of 3, so every rule can be read at a glance. It shows how much of the pattern a very simple tree can capture.</p>
-
-      <figure>
-        <img src="images/dt_tree_gini_depth3.png" alt="Shallow decision tree using the Gini criterion with depth 3" style="width:100%; height:auto; display:block;">
-        <figcaption><strong>Figure: Tree 2 (Gini, Depth 3).</strong> [FILL IN: one sentence naming the root split and the main rule this tree uses.]</figcaption>
-      </figure>
-
-      <h4>Tree 3: Tree Without Service_Claim_days (Entropy, Depth 4)</h4>
-
-      <p>Because <code>Service_Claim_days</code> dominates Tree 1, the third tree removes it and is limited to a depth of 4 with the entropy criterion. This tests whether the other claim characteristics carry fraud signal of their own.</p>
-
-      <figure>
-        <img src="images/dt_tree_no_service_days.png" alt="Decision tree built without the service-to-claim delay variable" style="width:100%; height:auto; display:block;">
-        <figcaption><strong>Figure: Tree 3 (Entropy, Depth 4, Without Service_Claim_days).</strong> [FILL IN: one sentence naming the root split and which variables replace the service-to-claim delay.]</figcaption>
-      </figure>
-
-      <h4>Comparing the Three Trees</h4>
-
-      <figure>
-        <table class="cluster-table">
-          <caption>Comparison of the Three Trees (Test Set)</caption>
-          <thead>
-            <tr>
-              <th>Metric</th>
-              <th>Tree 1: Entropy, Depth 8</th>
-              <th>Tree 2: Gini, Depth 3</th>
-              <th>Tree 3: No Service Days, Depth 4</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>Accuracy</td><td>87.35%</td><td>[FILL IN]</td><td>[FILL IN]</td></tr>
-            <tr><td>ROC-AUC</td><td>0.966</td><td>[FILL IN]</td><td>[FILL IN]</td></tr>
-            <tr><td>PR-AUC</td><td>0.761</td><td>[FILL IN]</td><td>[FILL IN]</td></tr>
-            <tr><td>Fraud Precision</td><td>39.10%</td><td>[FILL IN]</td><td>[FILL IN]</td></tr>
-            <tr><td>Fraud Recall</td><td>93.98%</td><td>[FILL IN]</td><td>[FILL IN]</td></tr>
-            <tr><td>False Positives</td><td>243</td><td>[FILL IN]</td><td>[FILL IN]</td></tr>
-            <tr><td>False Negatives</td><td>10</td><td>[FILL IN]</td><td>[FILL IN]</td></tr>
-          </tbody>
-        </table>
-        <figcaption><strong>Table: Comparison of the Three Trees.</strong> [FILL IN: one or two sentences on how simplifying the tree (Tree 2) and removing the service-to-claim delay (Tree 3) changed performance.]</figcaption>
-      </figure>
-
       <p>For context, the Naive Bayes models on the previous tab reached an ROC-AUC of 0.962 and a PR-AUC of 0.682. Compared with them, the tuned tree produced fewer false alarms (243 versus 295) and a higher PR-AUC (0.761), while Naive Bayes missed fewer fraudulent claims (3 versus 10).</p>
     </section>
 
