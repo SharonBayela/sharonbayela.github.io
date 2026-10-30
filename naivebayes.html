@@ -32,723 +32,196 @@
     </ul>
   </nav>
 </header>
-
 <main id="main" class="case-file">
   <div class="case-inner">
-
     <p class="eyebrow">NaiveBayes</p>
     <h2 class="page-title">Naive Bayes</h2>
 
+    <!-- OVERVIEW -->
+    <section id="overview" class="content-section">
+      <h3>Overview</h3>
+
+      <p>Naive Bayes is a supervised machine learning algorithm based on Bayes' theorem, used primarily for classification, where the goal is to assign an observation to one of several predefined categories. The algorithm estimates the probability that an observation belongs to a particular class given its observed predictor variables. It is called "naive" because it assumes the predictors are conditionally independent given the class, an assumption that is rarely true in practice but that makes the method fast, simple, and surprisingly effective in areas such as text classification, spam detection, medical diagnosis, and fraud detection.</p>
+
+      <p style="text-align:center; font-size:1.1rem;"><strong>P(C | X) = [P(X | C) &times; P(C)] / P(X)</strong></p>
+
+      <p>In this formula, P(C | X) is the posterior probability of class C given the observed features X, P(C) is the prior probability of the class, P(X | C) is the likelihood, and P(X) is the probability of the observed features. The model picks the class with the highest posterior probability.</p>
+
+      <figure>
+        <img src="images/nb_overview_flow.png" alt="Naive Bayes classification workflow" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Naive Bayes Classification Workflow.</strong> This diagram shows the overall process, from labeled observations to class probability estimation and prediction.</figcaption>
+      </figure>
+
+      <p>Two variants were used in this project. Multinomial Naive Bayes is typically applied to nonnegative count data, such as word frequencies in document classification, and models how often each feature occurs within each class. Bernoulli Naive Bayes is designed for binary features that record only the presence or absence of a characteristic, with every feature taking a value of zero or one. Because the prepared claims data consists of binary indicator columns, both models can be fit to it, although binary indicators are not a perfect match for the multinomial count model, so comparing the two is a useful check.</p>
+
+      <figure>
+        <img src="images/nb_variants.png" alt="Multinomial versus Bernoulli Naive Bayes" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Multinomial vs. Bernoulli Naive Bayes.</strong> This comparison shows the two variants and the feature assumptions each one makes.</figcaption>
+      </figure>
+
+      <p>The target variable in this analysis is <code>Is_Fraud</code>, where 0 is a legitimate claim and 1 is a fraudulent claim. Standard Multinomial and Bernoulli Naive Bayes are classification methods, so they do not directly estimate claim frequency, continuous claim severity, or risk-based premiums. Although this project's broader focus is frequency, severity, and pricing, fraud detection is examined here as a supplementary insurance risk classification problem.</p>
+    </section>
+
+    <!-- DATA PREP -->
+    <section id="data-prep" class="content-section">
+      <h3>Data Prep</h3>
+
+      <p>Unlike clustering and PCA, Naive Bayes is a supervised method, so it requires labeled data. The analysis uses the health insurance claims dataset of 10,000 observations and 23 variables, with <code>Is_Fraud</code> supplying the known class labels. The classes are imbalanced: 9,171 claims (91.71%) are legitimate and 829 (8.29%) are fraudulent.</p>
+
+      <p>Link to the labeled sample data (CSV): <a href="data/nb_sample_data.csv" download>nb_sample_data.csv</a></p>
+
+      <figure>
+        <img src="images/nb_data_sample.png" alt="Sample of the labeled insurance claims dataset" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Labeled Claims Data Sample.</strong> This image shows a small sample of the labeled health insurance claims dataset used for Naive Bayes.</figcaption>
+      </figure>
+
+      <p>Fourteen predictors were selected: <code>Claim_Amount</code>, <code>Patient_Age</code>, <code>No_of_Claims_Provider</code>, <code>Service_Claim_days</code>, <code>Length_of_Stay</code>, <code>Prior_Visits_12m</code>, <code>Chronic_Condition_Flag</code>, <code>Insurance_Type</code>, <code>Patient_Gender</code>, <code>Provider_Specialty</code>, <code>Visit_Type</code>, <code>State</code>, <code>Diagnosis_Code</code>, and <code>Procedure_Code</code>. The target <code>Is_Fraud</code> was excluded from the predictor matrix so the model never sees the outcome it is trying to predict.</p>
+
+      <p>Missing numeric values were filled with training-set medians, and missing categorical values were assigned an "Unknown" category. Selected numeric variables were grouped into predefined intervals, and categorical variables were one-hot encoded, producing 78 nonnegative numeric features. The data was split 80/20 into training and testing sets using Scikit-learn's <code>train_test_split</code> with <code>random_state=42</code>, with stratified sampling to keep the fraud proportion about the same in both subsets. The test features were aligned to the training columns so both sets have identical predictors.</p>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Training and Testing Split</caption>
+          <thead>
+            <tr>
+              <th>Dataset</th>
+              <th>Observations</th>
+              <th>Original Features</th>
+              <th>Encoded Features</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Training</td><td>8,000</td><td>14</td><td>78</td></tr>
+            <tr><td>Testing</td><td>2,000</td><td>14</td><td>78</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Training and Testing Split.</strong></figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/nb_train_test_split.png" alt="80 percent training and 20 percent testing split" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: 80/20 Training and Testing Split.</strong> This illustration shows how the data was divided into training and testing sets.</figcaption>
+      </figure>
+
+      <p>The two sets are disjoint, meaning no row appears in both, and the Python program confirmed that the number of shared row indices was zero. This matters because evaluating a model on rows it was trained on would produce misleadingly optimistic performance estimates.</p>
+
+      <figure>
+        <img src="images/nb_class_distribution.png" alt="Class distribution in training and testing sets" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Class Distribution Across Training and Testing Sets.</strong> The bars show that legitimate and fraudulent claims appear in nearly identical proportions in both subsets, confirming that stratification worked.</figcaption>
+      </figure>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="results" class="content-section">
+      <h3>Results</h3>
+
+      <p>Both classifiers were evaluated on the same testing set of 2,000 claims, made up of 1,834 legitimate and 166 fraudulent claims. The two models performed almost identically, with Multinomial Naive Bayes slightly ahead on accuracy and fraud recall.</p>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Classification Performance on the Test Set</caption>
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Multinomial NB</th>
+              <th>Bernoulli NB</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Accuracy</td><td>85.40%</td><td>85.25%</td></tr>
+            <tr><td>ROC-AUC</td><td>0.962</td><td>0.962</td></tr>
+            <tr><td>Fraud Precision</td><td>36.12%</td><td>35.82%</td></tr>
+            <tr><td>Fraud Recall</td><td>98.80%</td><td>98.19%</td></tr>
+            <tr><td>False Positives</td><td>290</td><td>292</td></tr>
+            <tr><td>False Negatives</td><td>2</td><td>3</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Classification Performance on the Test Set.</strong></figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/nb_confusion_matrices.png" alt="Confusion matrices for Multinomial and Bernoulli Naive Bayes" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Confusion Matrices.</strong> These matrices compare actual and predicted fraud labels for both models. Multinomial Naive Bayes correctly classified 1,544 legitimate and 164 fraudulent claims, flagged 290 legitimate claims as fraud, and missed two fraudulent claims. Bernoulli Naive Bayes correctly classified 1,542 legitimate and 163 fraudulent claims, flagged 292 legitimate claims, and missed three fraudulent claims.</figcaption>
+      </figure>
+
+      <p>Both models achieved very high fraud recall, meaning nearly every fraudulent claim was caught, but their fraud precision was low, meaning many of the claims they flagged were actually legitimate.</p>
+
+      <figure>
+        <img src="images/nb_roc_curve.png" alt="ROC curves for both Naive Bayes classifiers" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: ROC Curves.</strong> The ROC curves for Multinomial and Bernoulli Naive Bayes almost completely overlap, each with an AUC of approximately 0.962, showing that the two classifiers rank fraudulent claims above legitimate ones about equally well.</figcaption>
+      </figure>
+
+      <p>An AUC of 0.962 indicates strong discrimination between the two classes, but it does not remove classification errors, as the confusion matrices show. Both models were trained with <code>fit_prior=False</code>, which assigns equal prior probabilities to the two classes instead of using their observed frequencies. This setting likely contributes to the high recall and the large number of false positives, and because fraud is only 8.29% of the data, accuracy alone is not a sufficient measure of performance.</p>
+
+      <p>The Multinomial model was also examined to see which feature values are most associated with each class. Positive log differences indicate a stronger relative association with fraud, and negative values indicate a stronger association with legitimate claims.</p>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Top Features Associated with Fraud</caption>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Log Difference</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Service_Claim_days ≤ 2</td><td>2.54</td></tr>
+            <tr><td>Claim_Amount &gt; 1500</td><td>1.90</td></tr>
+            <tr><td>Service_Claim_days: 2–4</td><td>1.39</td></tr>
+            <tr><td>Service_Claim_days: 4–6</td><td>1.37</td></tr>
+            <tr><td>No_of_Claims_Provider &gt; 100</td><td>1.13</td></tr>
+            <tr><td>Claim_Amount: 1000–1500</td><td>1.09</td></tr>
+            <tr><td>Claim_Amount: 700–1000</td><td>0.51</td></tr>
+            <tr><td>Diagnosis_Code: I25.10</td><td>0.25</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Top Features Associated with Fraud.</strong> Shorter service-to-claim intervals, larger claim amounts, and higher provider claim counts show the strongest relative association with the fraud class.</figcaption>
+      </figure>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Top Features Associated with Legitimate Claims</caption>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Log Difference</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Service_Claim_days: 10–20</td><td>-5.48</td></tr>
+            <tr><td>Service_Claim_days: 20–30</td><td>-5.37</td></tr>
+            <tr><td>Service_Claim_days: 6–10</td><td>-4.57</td></tr>
+            <tr><td>Claim_Amount ≤ 300</td><td>-1.45</td></tr>
+            <tr><td>Claim_Amount: 300–500</td><td>-0.62</td></tr>
+            <tr><td>Diagnosis_Code: F41.9</td><td>-0.31</td></tr>
+            <tr><td>Provider_Specialty: Neurology</td><td>-0.30</td></tr>
+            <tr><td>No_of_Claims_Provider: 55–65</td><td>-0.23</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Top Features Associated with Legitimate Claims.</strong> Longer service-to-claim intervals and smaller claim amounts are more strongly associated with legitimate claims. These associations are descriptive and should not be read as evidence that any characteristic causes fraud.</figcaption>
+      </figure>
+    </section>
+
+    <!-- CONCLUSIONS -->
+    <section id="conclusions" class="content-section">
+      <h3>Conclusions</h3>
+
+      <p>The Naive Bayes analysis shows that supervised classification can separate potentially fraudulent claims from legitimate ones using historical claim characteristics. Both models reached an ROC-AUC of 0.962, indicating strong discrimination. Multinomial Naive Bayes was marginally better, with 85.40% accuracy versus 85.25% for Bernoulli, and it identified 164 of the 166 fraudulent claims compared with 163 for Bernoulli. The feature associations point the same way in both views of the data: shorter service-to-claim intervals, larger claim amounts, and higher provider claim counts were relatively more associated with fraud.</p>
+
+      <p>Just as important to report honestly, both models flagged roughly 290 legitimate claims as fraudulent, which produced fraud precision of only about 36% despite recall near 99%. In practice, that means Naive Bayes is better suited as an initial screening step for claims that warrant further investigation than as a final decision tool, and additional validation, threshold selection, and probability calibration would be needed before any operational use.</p>
+
+      <p>In terms of this project's central theme, fraud classification is related to but distinct from claim frequency and severity. These results do not directly estimate claim counts, claim amounts, or premiums, so Naive Bayes is retained as a supplementary analysis, and the regression-based methods later in this project are the more appropriate tools for modeling severity and frequency.</p>
+    </section>
     <p>
-      This section applies Multinomial and Bernoulli Naive Bayes
-      classification to health insurance claims. The objective is
-      to investigate whether historical claim characteristics can
-      distinguish fraudulent claims from legitimate claims.
+      <a href="https://github.com/SharonBayela/Machine_learning_project_F26.git" target="_blank" rel="noopener">
+          View the code on GitHub
+      </a>
     </p>
-
-    <p>
-      Although the broader research focuses on claim frequency,
-      severity, and risk-based pricing, this analysis examines
-      fraud detection as a supplementary insurance risk
-      classification problem.
-    </p>
-
-    <!-- ======================================= -->
-    <!-- (A) OVERVIEW -->
-    <!-- ======================================= -->
-
-    <section id="nb-overview">
-
-      <h3>(a) Overview</h3>
-
-      <p>
-        Naive Bayes is a supervised machine learning algorithm
-        based on Bayes' theorem. It is primarily used for
-        classification, where the objective is to assign an
-        observation to one of several predefined categories.
-      </p>
-
-      <p>
-        The algorithm estimates the probability of belonging
-        to a particular class based on the observed predictor
-        variables. It is described as "naive" because it
-        assumes that predictors are conditionally independent
-        given the target class.
-      </p>
-
-      <p>
-        Despite this simplifying assumption, Naive Bayes is
-        computationally efficient and widely used in text
-        classification, spam detection, medical diagnosis,
-        sentiment analysis, and fraud detection.
-      </p>
-
-      <p>
-        Bayes' theorem can be expressed as:
-      </p>
-
-      <p style="text-align:center; font-size:1.1rem;">
-        <strong>
-          P(C | X) = [P(X | C) &times; P(C)] / P(X)
-        </strong>
-      </p>
-
-      <p>
-        Here, P(C | X) represents the posterior probability
-        of class C given the observed features X. P(C) is the
-        prior probability of the class, P(X | C) is the
-        likelihood, and P(X) is the probability of the
-        observed features.
-      </p>
-
-      <figure style="margin:28px 0; text-align:center;">
-        <img
-          src="images/nb_overview_flow.png"
-          alt="Naive Bayes classification workflow"
-          style="width:100%; max-width:850px; height:auto;"
-        >
-        <figcaption>
-          Figure 1: Overview of the Naive Bayes classification
-          workflow, from labeled observations to class
-          probability estimation and prediction.
-        </figcaption>
-      </figure>
-
-      <h4>Multinomial Naive Bayes</h4>
-
-      <p>
-        Multinomial Naive Bayes is commonly applied to
-        nonnegative count data, particularly word frequencies
-        in document classification. It models how frequently
-        different features occur within each class.
-      </p>
-
-      <p>
-        In this study, selected numerical predictors were
-        converted into intervals, while categorical variables
-        were transformed into numeric indicator variables
-        using one-hot encoding. These nonnegative features
-        were used to train the Multinomial Naive Bayes model.
-      </p>
-
-      <p>
-        Although this representation is compatible with the
-        Scikit-learn implementation, binary indicators are
-        not a perfect match for the multinomial count model.
-      </p>
-
-      <h4>Bernoulli Naive Bayes</h4>
-
-      <p>
-        Bernoulli Naive Bayes is designed for binary predictor
-        variables representing the presence or absence of
-        a characteristic. Each feature takes a value of
-        either zero or one.
-      </p>
-
-      <p>
-        For example, an indicator may represent whether
-        a claim belongs to a particular monetary interval,
-        diagnosis category, or provider specialty.
-      </p>
-
-      <p>
-        Since the prepared insurance dataset contains
-        binary indicator variables, Bernoulli Naive Bayes
-        provides an appropriate comparison with
-        Multinomial Naive Bayes.
-      </p>
-
-      <figure style="margin:28px 0; text-align:center;">
-        <img
-          src="images/nb_variants.png"
-          alt="Multinomial versus Bernoulli Naive Bayes"
-          style="width:100%; max-width:850px; height:auto;"
-        >
-        <figcaption>
-          Figure 2: Comparison of Multinomial and Bernoulli
-          Naive Bayes and their feature assumptions.
-        </figcaption>
-      </figure>
-
-      <h4>Application to Insurance Claims</h4>
-
-      <p>
-        The target variable in this analysis is
-        <strong>Is_Fraud</strong>, where 0 represents a
-        legitimate claim and 1 represents a fraudulent claim.
-        The models use claim characteristics to estimate
-        the probability of each classification outcome.
-      </p>
-
-      <p>
-        Standard Multinomial and Bernoulli Naive Bayes
-        are classification methods. They do not directly
-        estimate claim frequency, continuous claim severity,
-        or risk-based insurance premiums.
-      </p>
-
-    </section>
-
-    <hr>
-
-    <!-- ======================================= -->
-    <!-- (B) DATA PREPARATION -->
-    <!-- ======================================= -->
-
-    <section id="nb-data-preparation">
-
-      <h3>(b) Data Preparation</h3>
-
-      <h4>Dataset Description</h4>
-
-      <p>
-        The analysis uses a health insurance claims dataset
-        containing 10,000 observations and 23 variables.
-        The dataset includes patient characteristics,
-        claim information, provider-related variables,
-        and a binary fraud indicator.
-      </p>
-
-      <p>
-        Naive Bayes is a supervised learning algorithm,
-        meaning that labeled observations are required
-        during training. The Is_Fraud variable provides
-        the known class labels from which the algorithm
-        learns statistical relationships.
-      </p>
-
-      <p>
-        The dataset contains 9,171 legitimate claims
-        (91.71%) and 829 fraudulent claims (8.29%).
-        This indicates that the classification target
-        is imbalanced.
-      </p>
-
-      <figure style="margin:28px 0; text-align:center;">
-        <img
-          src="images/nb_data_sample.png"
-          alt="Sample of the insurance claims dataset"
-          style="width:100%; max-width:850px; height:auto;"
-        >
-        <figcaption>
-          Figure 3: Sample observations from the labeled
-          health insurance claims dataset.
-        </figcaption>
-      </figure>
-
-      <p>
-        <a href="images/nb_sample_data.csv" download>
-          Download Sample Dataset (CSV)
-        </a>
-      </p>
-
-      <h4>Feature Selection</h4>
-
-      <p>
-        Fourteen predictor variables were selected:
-        Claim_Amount, Patient_Age, No_of_Claims_Provider,
-        Service_Claim_days, Length_of_Stay,
-        Prior_Visits_12m, Chronic_Condition_Flag,
-        Insurance_Type, Patient_Gender,
-        Provider_Specialty, Visit_Type, State,
-        Diagnosis_Code, and Procedure_Code.
-      </p>
-
-      <p>
-        The target variable Is_Fraud was excluded from
-        the predictor matrix to prevent the model from
-        directly accessing the outcome during prediction.
-      </p>
-
-      <h4>Training and Testing Split</h4>
-
-      <p>
-        The dataset was divided into an 80% training
-        set and a 20% testing set using Scikit-learn's
-        train_test_split function with random_state=42.
-      </p>
-
-      <p>
-        Stratified sampling was used to maintain
-        approximately the same proportion of fraudulent
-        and legitimate claims in both subsets.
-      </p>
-
-      <table style="width:100%; border-collapse:collapse; margin:20px 0;">
-        <thead>
-          <tr>
-            <th style="padding:10px; text-align:left;">Dataset</th>
-            <th style="padding:10px; text-align:left;">Observations</th>
-            <th style="padding:10px; text-align:left;">Original Features</th>
-            <th style="padding:10px; text-align:left;">Encoded Features</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="padding:10px;">Training</td>
-            <td style="padding:10px;">8,000</td>
-            <td style="padding:10px;">14</td>
-            <td style="padding:10px;">78</td>
-          </tr>
-          <tr>
-            <td style="padding:10px;">Testing</td>
-            <td style="padding:10px;">2,000</td>
-            <td style="padding:10px;">14</td>
-            <td style="padding:10px;">78</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <figure style="margin:28px 0; text-align:center;">
-        <img
-          src="images/nb_train_test_split.png"
-          alt="80 percent training and 20 percent testing split"
-          style="width:100%; max-width:850px; height:auto;"
-        >
-        <figcaption>
-          Figure 4: Illustration of the 80/20
-          training and testing data split.
-        </figcaption>
-      </figure>
-
-      <p>
-        The training and testing sets were disjoint,
-        meaning that no row was assigned to both sets.
-        The Python program verified that the number
-        of shared row indices was zero.
-      </p>
-
-      <p>
-        Disjoint datasets are necessary because
-        evaluating a model on observations used
-        during training could produce misleadingly
-        optimistic performance estimates.
-      </p>
-
-      <figure style="margin:28px 0; text-align:center;">
-        <img
-          src="images/nb_class_distribution.png"
-          alt="Class distribution in training and testing sets"
-          style="width:100%; max-width:850px; height:auto;"
-        >
-        <figcaption>
-          Figure 5: Distribution of legitimate and
-          fraudulent claims across the training
-          and testing sets.
-        </figcaption>
-      </figure>
-
-      <h4>Preprocessing and Encoding</h4>
-
-      <p>
-        Missing numerical values were replaced using
-        training-set medians, while missing categorical
-        values were assigned an Unknown category.
-        Selected numerical variables were grouped
-        into predefined intervals.
-      </p>
-
-      <p>
-        Categorical predictors were converted into
-        numeric binary indicators using one-hot
-        encoding. The resulting training and testing
-        datasets each contained 78 numeric features.
-      </p>
-
-      <p>
-        The testing features were aligned with the
-        training features to ensure that both
-        datasets had identical predictor columns.
-      </p>
-
-    </section>
-
-    <!-- ======================================= -->
-    <!-- (D) RESULTS -->
-    <!-- ======================================= -->
-
-    <section id="nb-results">
-
-      <h3>(d) Results</h3>
-
-      <h4>Classification Performance</h4>
-
-      <p>
-        Both Naive Bayes classifiers were evaluated
-        on the same testing dataset containing
-        2,000 insurance claims, including
-        1,834 legitimate claims and 166
-        fraudulent claims.
-      </p>
-
-      <table style="width:100%; border-collapse:collapse; margin:20px 0;">
-        <thead>
-          <tr>
-            <th style="padding:10px; text-align:left;">Metric</th>
-            <th style="padding:10px; text-align:left;">Multinomial NB</th>
-            <th style="padding:10px; text-align:left;">Bernoulli NB</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="padding:10px;">Accuracy</td>
-            <td style="padding:10px;">85.40%</td>
-            <td style="padding:10px;">85.25%</td>
-          </tr>
-          <tr>
-            <td style="padding:10px;">ROC-AUC</td>
-            <td style="padding:10px;">0.962</td>
-            <td style="padding:10px;">0.962</td>
-          </tr>
-          <tr>
-            <td style="padding:10px;">Fraud Precision</td>
-            <td style="padding:10px;">36.12%</td>
-            <td style="padding:10px;">35.82%</td>
-          </tr>
-          <tr>
-            <td style="padding:10px;">Fraud Recall</td>
-            <td style="padding:10px;">98.80%</td>
-            <td style="padding:10px;">98.19%</td>
-          </tr>
-          <tr>
-            <td style="padding:10px;">False Positives</td>
-            <td style="padding:10px;">290</td>
-            <td style="padding:10px;">292</td>
-          </tr>
-          <tr>
-            <td style="padding:10px;">False Negatives</td>
-            <td style="padding:10px;">2</td>
-            <td style="padding:10px;">3</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p>
-        Multinomial Naive Bayes achieved slightly
-        higher accuracy and fraud recall than
-        Bernoulli Naive Bayes. However, both
-        models produced very similar results.
-      </p>
-
-      <h4>Confusion Matrices</h4>
-
-      <figure style="margin:28px 0; text-align:center;">
-        <img
-          src="images/nb_confusion_matrices.png"
-          alt="Confusion matrices for Multinomial and Bernoulli Naive Bayes"
-          style="width:100%; max-width:950px; height:auto;"
-        >
-        <figcaption>
-          Figure 6: Confusion matrices comparing
-          the actual and predicted fraud labels.
-        </figcaption>
-      </figure>
-
-      <p>
-        Multinomial Naive Bayes correctly classified
-        1,544 legitimate claims and 164 fraudulent
-        claims. It incorrectly flagged 290 legitimate
-        claims as fraudulent and failed to detect
-        two fraudulent claims.
-      </p>
-
-      <p>
-        Bernoulli Naive Bayes correctly classified
-        1,542 legitimate claims and 163 fraudulent
-        claims. It incorrectly flagged 292
-        legitimate claims and missed three
-        fraudulent claims.
-      </p>
-
-      <p>
-        Both models achieved high fraud recall,
-        indicating that nearly all fraudulent
-        claims were identified. However, their
-        relatively low fraud precision indicates
-        that many claims flagged as fraudulent
-        were actually legitimate.
-      </p>
-
-      <h4>ROC Curve Analysis</h4>
-
-      <figure style="margin:28px 0; text-align:center;">
-        <img
-          src="images/nb_roc_curve.png"
-          alt="ROC curves for both Naive Bayes classifiers"
-          style="width:100%; max-width:850px; height:auto;"
-        >
-        <figcaption>
-          Figure 7: ROC curves for Multinomial
-          and Bernoulli Naive Bayes, each
-          achieving an AUC of approximately 0.962.
-        </figcaption>
-      </figure>
-
-      <p>
-        Both classifiers achieved an ROC-AUC
-        of approximately 0.962, indicating
-        strong ability to rank fraudulent
-        claims above legitimate claims.
-      </p>
-
-      <p>
-        The ROC curves almost completely
-        overlap, suggesting that the
-        classifiers have similar
-        discrimination performance.
-      </p>
-
-      <p>
-        Nevertheless, a high ROC-AUC does
-        not eliminate classification errors.
-        The confusion matrices show that
-        both models incorrectly flagged
-        a substantial number of
-        legitimate claims.
-      </p>
-
-      <h4>Features Associated with Fraud</h4>
-
-      <p>
-        The Multinomial Naive Bayes model
-        was examined to identify feature
-        values associated with fraudulent
-        and legitimate claims.
-      </p>
-
-      <p>
-        Positive log-probability differences
-        indicate stronger relative association
-        with the fraud class, while negative
-        values indicate stronger association
-        with legitimate claims.
-      </p>
-
-      <h4>Top Features Associated with Fraud</h4>
-
-      <table style="width:100%; border-collapse:collapse; margin:20px 0;">
-        <thead>
-          <tr>
-            <th style="padding:10px; text-align:left;">Feature</th>
-            <th style="padding:10px; text-align:left;">Log Difference</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td style="padding:8px;">Service_Claim_days ≤ 2</td><td>2.54</td></tr>
-          <tr><td style="padding:8px;">Claim_Amount &gt; 1500</td><td>1.90</td></tr>
-          <tr><td style="padding:8px;">Service_Claim_days: 2–4</td><td>1.39</td></tr>
-          <tr><td style="padding:8px;">Service_Claim_days: 4–6</td><td>1.37</td></tr>
-          <tr><td style="padding:8px;">No_of_Claims_Provider &gt; 100</td><td>1.13</td></tr>
-          <tr><td style="padding:8px;">Claim_Amount: 1000–1500</td><td>1.09</td></tr>
-          <tr><td style="padding:8px;">Claim_Amount: 700–1000</td><td>0.51</td></tr>
-          <tr><td style="padding:8px;">Diagnosis_Code: I25.10</td><td>0.25</td></tr>
-        </tbody>
-      </table>
-
-      <p>
-        Shorter service-to-claim intervals,
-        larger claim amounts, and higher
-        provider claim counts showed stronger
-        relative associations with the fraud
-        class in the fitted model.
-      </p>
-
-      <h4>Top Features Associated with Legitimate Claims</h4>
-
-      <table style="width:100%; border-collapse:collapse; margin:20px 0;">
-        <thead>
-          <tr>
-            <th style="padding:10px; text-align:left;">Feature</th>
-            <th style="padding:10px; text-align:left;">Log Difference</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td style="padding:8px;">Service_Claim_days: 10–20</td><td>-5.48</td></tr>
-          <tr><td style="padding:8px;">Service_Claim_days: 20–30</td><td>-5.37</td></tr>
-          <tr><td style="padding:8px;">Service_Claim_days: 6–10</td><td>-4.57</td></tr>
-          <tr><td style="padding:8px;">Claim_Amount ≤ 300</td><td>-1.45</td></tr>
-          <tr><td style="padding:8px;">Claim_Amount: 300–500</td><td>-0.62</td></tr>
-          <tr><td style="padding:8px;">Diagnosis_Code: F41.9</td><td>-0.31</td></tr>
-          <tr><td style="padding:8px;">Provider_Specialty: Neurology</td><td>-0.30</td></tr>
-          <tr><td style="padding:8px;">No_of_Claims_Provider: 55–65</td><td>-0.23</td></tr>
-        </tbody>
-      </table>
-
-      <p>
-        Longer service-to-claim intervals
-        and smaller claim amounts were more
-        strongly associated with legitimate
-        claims according to the model.
-      </p>
-
-      <p>
-        These associations are descriptive
-        and should not be interpreted
-        as evidence that particular
-        characteristics cause fraud.
-      </p>
-
-      <h4>Class Imbalance and Limitations</h4>
-
-      <p>
-        Fraudulent claims represent only
-        8.29% of the full dataset.
-        Consequently, accuracy alone is
-        not sufficient to assess the
-        effectiveness of the models.
-      </p>
-
-      <p>
-        Both models were trained using
-        fit_prior=False, which assigns
-        equal prior probabilities to
-        the two classes rather than
-        using their observed frequencies.
-      </p>
-
-      <p>
-        This setting influences the
-        classification results and may
-        contribute to the high recall
-        and substantial number of
-        false positive predictions.
-      </p>
-
-    </section>
-
-    <hr>
-
-    <!-- ======================================= -->
-    <!-- (E) CONCLUSIONS -->
-    <!-- ======================================= -->
-
-    <section id="nb-conclusions">
-
-      <h3>(e) Conclusions</h3>
-
-      <p>
-        The Naive Bayes analysis demonstrated
-        how supervised classification can be
-        applied to historical health insurance
-        claims to distinguish potentially
-        fraudulent claims from legitimate claims.
-      </p>
-
-      <p>
-        Both Multinomial and Bernoulli Naive
-        Bayes achieved an ROC-AUC of 0.962,
-        indicating strong discrimination
-        between the two claim categories.
-      </p>
-
-      <p>
-        Multinomial Naive Bayes performed
-        marginally better, achieving an
-        accuracy of 85.40% compared with
-        85.25% for Bernoulli Naive Bayes.
-      </p>
-
-      <p>
-        The Multinomial model correctly
-        identified 164 of 166 fraudulent
-        claims, while Bernoulli Naive
-        Bayes identified 163.
-      </p>
-
-      <p>
-        However, both models incorrectly
-        flagged approximately 290 legitimate
-        claims as fraudulent. This resulted
-        in low fraud precision despite
-        high fraud recall.
-      </p>
-
-      <p>
-        The feature association analysis
-        suggested that shorter
-        service-to-claim intervals,
-        larger claim amounts, and higher
-        provider claim counts were
-        relatively more associated
-        with fraudulent claims.
-      </p>
-
-      <p>
-        These findings suggest that
-        Naive Bayes may be useful as
-        an initial screening method
-        for identifying claims that
-        warrant further investigation.
-        However, additional validation,
-        threshold selection, and
-        probability calibration would
-        be needed before operational use.
-      </p>
-
-      <h4>Connection to the Research Topic</h4>
-
-      <p>
-        The broader research focuses
-        on predicting insurance claim
-        frequency and severity to
-        support risk-based pricing.
-      </p>
-
-      <p>
-        This Naive Bayes analysis
-        addresses a related but
-        distinct problem: fraud
-        classification.
-      </p>
-
-      <p>
-        Although fraud may influence
-        insurance costs and claims
-        management, these results
-        do not directly estimate
-        claim frequency, claim
-        severity, or insurance premiums.
-      </p>
-
-      <p>
-        Therefore, Naive Bayes is
-        retained as a supplementary
-        classification analysis.
-        Regression-based methods
-        will be more appropriate
-        for modeling claim amounts
-        and suitably defined
-        claim counts.
-      </p>
-
-      <p>
-        <strong>Overall:</strong>
-        Multinomial and Bernoulli
-        Naive Bayes demonstrated
-        strong fraud detection
-        performance in terms of
-        recall and ROC-AUC,
-        but the relatively high
-        false positive rates
-        highlight important
-        limitations for practical
-        insurance applications.
-      </p>
-
-    </section>
-
   </div>
 </main>
-
 <footer class="site-footer">
-  <span>
-    Sharon Bayela &middot;
-    Machine Learning for Data Science &middot;
-    Fall 2026
-  </span>
+  <span>Sharon Bayela &middot; Machine Learning for Data Science &middot; Fall 2026</span>
   <span>Tab: NaiveBayes</span>
 </footer>
-
 </body>
 </html>
