@@ -164,7 +164,7 @@
 
       <p>The decision tree addresses the early fraud detection part of the research question: whether claim, provider, and patient characteristics follow patterns that separate fraudulent claims from legitimate ones, and whether those patterns can be expressed as readable rules. It does not model claim frequency, severity, or premiums directly. Three different trees were built and are compared below. Tree 1 is the tuned model, whose settings were chosen by five-fold cross-validation on the training set, scored by precision-recall AUC. It used the entropy criterion, a maximum depth of 8, a minimum of 50 observations per leaf, and no additional cost-complexity pruning, with a cross-validated PR-AUC of 0.754. All trees used balanced class weights so the rare fraud class was not ignored, and all were evaluated on the same testing set of 2,000 claims, made up of 1,834 legitimate and 166 fraudulent claims.</p>
 
-      <h4>Tree 1: Tuned Tree (Entropy, Depth 8)</h4>
+      <h4>Tree 1: Tuned Tree (Entropy, Depth 4)</h4>
 
       <figure>
         <img src="images/decision_tree.png" alt="Top levels of the tuned decision tree" style="width:100%; height:auto; display:block;">
