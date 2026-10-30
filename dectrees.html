@@ -110,7 +110,7 @@
 
       <p>Supervised methods learn from examples whose correct answers are already known, so they can be built only from labeled data. Each claim must have a known class label, which the model learns to predict from the other variables. Rows without a label cannot be used for training or for testing. The analysis uses the health insurance claims dataset of 10,000 observations and 23 variables, with <code>Is_Fraud</code> supplying the known labels (0 for a legitimate claim and 1 for a fraudulent claim). The classes are imbalanced: 9,171 claims (91.71%) are legitimate and 829 (8.29%) are fraudulent.</p>
 
-      <p>Link to the labeled sample data (CSV): <a href="data/dt_sample_data.csv" download>dt_sample_data.csv</a></p>
+      <p>Link to the labeled sample data (CSV): <a href="data/dt_prepared_data.csv" download>dt_sample_data.csv</a></p>
 
       <figure>
         <img src="images/dt_data_sample.png" alt="Sample of the labeled insurance claims dataset" style="width:100%; height:auto; display:block;">
@@ -147,9 +147,7 @@
         <img src="images/dt_train_test_split.png" alt="80 percent training and 20 percent testing split" style="width:100%; height:auto; display:block;">
         <figcaption><strong>Figure: 80/20 Training and Testing Split.</strong> This illustration shows how the labeled data was divided into training and testing sets.</figcaption>
       </figure>
-
-      <p>Links to the two sets (CSV): <a href="data/dt_training_set.csv" download>dt_training_set.csv</a> and <a href="data/dt_testing_set.csv" download>dt_testing_set.csv</a></p>
-
+      
       <p>The two sets must be disjoint, meaning no row appears in both, and the Python program confirmed that the number of shared row indices was zero. If the same claims were used for both training and testing, the model could simply memorize them, and the test would measure memory rather than the ability to generalize, producing misleadingly optimistic accuracy. A decision tree is especially prone to this, because an unrestricted tree can grow until it fits every training claim perfectly. Settings such as the splitting criterion, maximum depth, minimum leaf size, and pruning strength were chosen with five-fold cross-validation inside the training set, so the testing set influenced none of the modeling decisions.</p>
 
       <figure>
