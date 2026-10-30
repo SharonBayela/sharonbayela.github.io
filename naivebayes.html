@@ -41,7 +41,7 @@
     <section id="overview" class="content-section">
       <h3>Overview</h3>
 
-      <p>Naive Bayes is a supervised machine learning algorithm based on Bayes' theorem, used primarily for classification, where the goal is to assign an observation to one of several predefined categories. The algorithm estimates the probability that an observation belongs to a particular class given its observed predictor variables. It is called "naive" because it assumes the predictors are conditionally independent given the class, an assumption that is rarely true in practice but that makes the method fast, simple, and surprisingly effective in areas such as text classification, spam detection, medical diagnosis, and fraud detection.</p>
+      <p> Naive Bayes is a supervised classification algorithm that uses Bayes' theorem to predict which category an observation belongs to based on its features. It earns the name "naive" by assuming all predictor variables are completely independent of one another given the class, a simplification that seldom holds in reality, yet allows the model to remain exceptionally fast, easy to implement, and effective for tasks like text categorization, spam filtering, fraud detection, and medical diagnostics.</p>
 
       <p style="text-align:center; font-size:1.1rem;"><strong>P(C | X) = [P(X | C) &times; P(C)] / P(X)</strong></p>
 
@@ -52,7 +52,7 @@
         <figcaption><strong>Figure: Naive Bayes Classification Workflow.</strong> This diagram shows the overall process, from labeled observations to class probability estimation and prediction.</figcaption>
       </figure>
 
-      <p>Two variants were used in this project. Multinomial Naive Bayes is typically applied to nonnegative count data, such as word frequencies in document classification, and models how often each feature occurs within each class. Bernoulli Naive Bayes is designed for binary features that record only the presence or absence of a characteristic, with every feature taking a value of zero or one. Because the prepared claims data consists of binary indicator columns, both models can be fit to it, although binary indicators are not a perfect match for the multinomial count model, so comparing the two is a useful check.</p>
+      <p>This project employed two distinct variants. Multinomial Naive Bayes is generally suited for nonnegative count data, such as word occurrences in document classification, by modeling how frequently each feature appears within a class. In contrast, Bernoulli Naive Bayes targets binary features that indicate only the presence or absence of a trait using values of zero and one. Since the prepared claims data relies on binary indicator columns, you can apply both models. Although binary values do not perfectly align with the multinomial count framework, comparing the two approaches provides a valuable evaluation check.</p>
 
       <figure>
         <img src="images/nb_variants.png" alt="Multinomial versus Bernoulli Naive Bayes" style="width:100%; height:auto; display:block;">
@@ -103,7 +103,7 @@
         <figcaption><strong>Figure: 80/20 Training and Testing Split.</strong> This illustration shows how the data was divided into training and testing sets.</figcaption>
       </figure>
 
-      <p>The two sets are disjoint, meaning no row appears in both, and the Python program confirmed that the number of shared row indices was zero. This matters because evaluating a model on rows it was trained on would produce misleadingly optimistic performance estimates.</p>
+      <p>The two sets are disjoint, meaning no row appears in both. This matters because evaluating a model on rows it was trained on would produce misleadingly optimistic performance estimates.</p>
 
       <figure>
         <img src="images/nb_class_distribution.png" alt="Class distribution in training and testing sets" style="width:100%; height:auto; display:block;">
@@ -173,10 +173,9 @@
         <figcaption><strong>Figure: ROC Curves.</strong> The ROC curves for Multinomial and Bernoulli Naive Bayes overlap, each with an AUC of approximately 0.962, showing that the two classifiers rank fraudulent claims above legitimate ones about equally well.</figcaption>
       </figure>
 
-      <p>An AUC of 0.962 indicates strong discrimination between the two classes, and the precision-recall AUC of about 0.68 is roughly eight times the no-skill baseline of 0.083, which confirms that the signal is real and not an artifact of class imbalance. Both models were trained with <code>fit_prior=False</code>, which assigns equal prior probabilities to the two classes instead of using their observed frequencies. This setting contributes to the high recall and the large number of false positives. Multinomial and Bernoulli Naive Bayes are expected to behave almost identically on one-hot indicator features, so the 0.001 difference in PR-AUC should not be interpreted as a meaningful gap.</p>
-
-      <p>The Multinomial model was also examined to see which feature values are most associated with each class. Positive log differences indicate a stronger relative association with fraud, and negative values indicate a stronger association with legitimate claims. Only feature values with at least 30 training rows were considered, so that extreme values are not produced by smoothing alone.</p>
-
+      <p>An AUC of 0.962 demonstrates excellent separation between the classes, and the precision-recall AUC of approximately 0.68 reaches about eight times the baseline of 0.083, verifying that the signal is genuine rather than a result of class imbalance. Both algorithms were trained with fit_prior set to false, giving each class equal prior probabilities rather than relying on their actual frequencies. This configuration drives up the recall but also increases the volume of false positives. Because Multinomial and Bernoulli Naive Bayes perform nearly the same on one-hot features, the 0.001 difference in PR-AUC is negligible and lacks practical significance.<p>
+      
+      <p>Researchers also reviewed the Multinomial model to identify which feature values associate most closely with each class. Positive log differences point to a stronger relative connection to fraud, while negative values signal a closer tie to legitimate claims. To prevent smoothing artifacts from producing extreme results, the evaluation was restricted to feature values supported by at least thirty training rows.</p>
       <figure>
         <table class="cluster-table">
           <caption>Top Features Associated with Fraud</caption>
@@ -228,11 +227,11 @@
     <section id="conclusions" class="content-section">
       <h3>Conclusions</h3>
 
-      <p>The Naive Bayes analysis shows that claim characteristics follow predictable patterns that separate fraudulent claims from legitimate ones. Both models reached an ROC-AUC of 0.962 and a PR-AUC of about 0.68, and they produced identical classifications, catching 163 of the 166 fraudulent claims. Timing and amount were the strongest signals: claims filed within about six days of service, claims above $1,000, and claims from providers with more than 100 claims were relatively more associated with fraud, while longer service-to-claim delays and smaller amounts were associated with legitimate claims. This supports the early fraud detection part of the research question, because these characteristics are available when a claim is submitted.</p>
+      <p>The Naive Bayes findings indicate that specific claim attributes effectively separate fraudulent submissions from legitimate ones. Both models achieved an ROC AUC score of 0.962 and a PR AUC value of approximately 0.68, producing identical classifications that caught 163 out of 166 fraudulent cases. Timing and financial amounts served as primary signals, where claims submitted within roughly six days of service, amounts exceeding $1,000, and high volume providers submitting over 100 claims correlated more with fraud. Conversely, extended service delays and smaller amounts aligned with legitimate claims, supporting the objective of early fraud detection since these details are accessible at submission.</p>
 
-      <p>Just as important to report honestly, both models flagged 295 legitimate claims as fraudulent, which produced fraud precision of only about 36% despite recall of 98%. Reviewing the roughly 23% of claims that were flagged (458 of 2,000) would capture 98% of the fraud, so Naive Bayes is better suited as a high-recall first-stage screening step than as a final decision tool. Its independence assumption is unlikely to hold for claim amount, service delay, and provider volume, so its predicted probabilities are probably overconfident and should be used for ranking rather than taken at face value. The test set also contains only 166 fraudulent claims, so the metrics carry some uncertainty, and the best smoothing value (5.0) was the largest one tried. Additional validation, threshold selection, and probability calibration would be needed before any operational use.</p>
+      <p>To maintain transparency, both models also flagged 295 legitimate claims as fraudulent, yielding a precision rate of about 36% despite achieving 98% recall. Examining the approximately 23% of total claims flagged (458 out of 2,000) secures 98% of the actual fraud, positioning Naive Bayes as an efficient initial screening layer rather than a standalone decision engine. Given that the independence assumption likely fails for attributes like claim amount and service delay, the resulting probabilities tend to be overconfident and are best utilized for ranking purposes. Furthermore, the limited count of 166 fraudulent test cases introduces uncertainty, and the optimal smoothing parameter of 5.0 was the highest evaluated, indicating that operational use would require thorough validation, threshold tuning, and probability calibration.</p>
 
-      <p>In terms of this project's central theme, fraud classification is related to but distinct from claim frequency and severity. These results do not directly estimate claim counts, claim amounts, or premiums. The fraud probabilities from this model could serve as an additional input to risk-based pricing, but testing that idea is left to later models. Naive Bayes is retained as a simple, fast baseline for the fraud classification task, and the regression-based and boosting methods later in this project are the more appropriate tools for modeling severity and frequency.</p>
+      <p>Reflecting the overarching goals of the project, fraud classification remains distinct from modeling claim frequency and severity. These results do not directly estimate claim counts, financial payouts, or premium pricing, though the generated probabilities could potentially augment risk based pricing models in later stages. Ultimately, Naive Bayes serves as a fast and straightforward baseline for fraud identification, leaving regression and boosting methods to handle severity and frequency modeling.</p>
     </section>
     <p>
       <a href="https://github.com/SharonBayela/Machine_learning_project_F26.git" target="_blank" rel="noopener">
