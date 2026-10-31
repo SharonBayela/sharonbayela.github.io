@@ -41,14 +41,14 @@
     <section id="overview" class="content-section">
       <h3>Overview</h3>
 
-      <p>A decision tree is a supervised machine learning algorithm used for classification and regression. It works by repeatedly dividing observations into smaller, more homogeneous groups based on the values of predictor variables, and each division is expressed as a simple yes-or-no question about one variable. A tree consists of a root node (the first question, applied to all observations), decision nodes (further questions), branches (the answers), and terminal leaf nodes, which give the predicted class or value. Because the path from the root to a leaf is a readable sequence of rules, decision trees are among the most interpretable models in machine learning.</p>
+      <p>A decision tree is a supervised algorithm used for both classification and regression tasks. It operates by iteratively partitioning a dataset into smaller, more uniform subsets based on feature values, with each split framed as a straightforward binary choice about a single variable. The structure includes a root node that poses the initial question to the entire dataset, interior decision nodes that ask subsequent questions, branches representing the outcomes, and terminal leaf nodes that output the final prediction. Because following a path from the top node down to a leaf amounts to reading a clear sequence of rules, decision trees stand out as one of the most transparent and easy to interpret models in machine learning.</p>
 
       <figure>
         <img src="images/dt_example_tree.png" alt="Illustrative decision tree for classifying insurance claim risk" style="width:100%; height:auto; display:block;">
         <figcaption><strong>Figure: Illustrative Decision Tree.</strong> This diagram shows the parts of a tree (root node, decision nodes, branches, and leaves) for classifying insurance claim risk. The thresholds are hypothetical and are not fitted results from the dataset.</figcaption>
       </figure>
 
-      <p>Decision trees can be used for classification (for example, labeling a claim as fraudulent or legitimate), for regression (for example, predicting a claim amount), for segmenting customers into risk groups, and for identifying which variables matter most. For insurance claims, a tree can reveal relationships among claim amounts, patient characteristics, insurance types, provider characteristics, and claim outcomes, and its rules can be turned directly into screening or pricing tiers. In this project the target variable is <code>Is_Fraud</code>, so the tree is used for fraud classification, a supplementary risk question alongside the project's main focus on claim frequency, severity, and pricing.</p>
+      <p>Decision trees serve multiple purposes including classification such as identifying whether a claim is fraudulent or legitimate, regression like predicting financial payouts, customer segmentation by risk, and feature importance ranking. In insurance applications, these models uncover interactions among claim amounts, client demographics, coverage types, provider details, and final outcomes, allowing decision rules to translate directly into screening workflows or pricing tiers. Within this context, the target variable focuses on fraud status, making the tree a supplementary risk assessment tool that complements the primary objectives of modeling claim frequency, severity, and pricing.</p>
 
       <h4>Gini Impurity, Entropy, and Information Gain</h4>
 
@@ -66,43 +66,6 @@
       <p>Impurity alone describes one node. To judge a split, the algorithm compares the parent node with the child nodes it produces. Information gain is the reduction in impurity from the split: the parent's impurity minus the size-weighted average impurity of the children. The tree evaluates many candidate splits and keeps the one with the largest gain. With Gini the same quantity is called the Gini gain. Splitting continues until a stopping rule is met, such as a maximum depth, a minimum leaf size, or no further gain.</p>
 
       <p style="text-align:center; font-size:1.1rem;"><strong>Information Gain = Impurity(parent) &minus; &Sigma; (n<sub>j</sub> / n) &times; Impurity(child<sub>j</sub>)</strong></p>
-
-      <h4>Worked Example</h4>
-
-      <p>Suppose 10 insurance claims contain 4 fraudulent and 6 legitimate claims, and a proposed split produces two groups: Child A with 3 fraudulent and 1 legitimate claim, and Child B with 1 fraudulent and 5 legitimate claims.</p>
-
-      <figure>
-        <table class="cluster-table">
-          <caption>Evaluating a Proposed Split with Entropy and Gini</caption>
-          <thead>
-            <tr>
-              <th>Node</th>
-              <th>Fraud</th>
-              <th>Legitimate</th>
-              <th>Entropy</th>
-              <th>Gini</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>Parent (n = 10)</td><td>4</td><td>6</td><td>0.971</td><td>0.480</td></tr>
-            <tr><td>Child A (n = 4)</td><td>3</td><td>1</td><td>0.811</td><td>0.375</td></tr>
-            <tr><td>Child B (n = 6)</td><td>1</td><td>5</td><td>0.650</td><td>0.278</td></tr>
-            <tr><td>Weighted average of children</td><td></td><td></td><td>0.715</td><td>0.317</td></tr>
-            <tr><td><strong>Information gain</strong></td><td></td><td></td><td><strong>0.256 bits</strong></td><td><strong>0.163</strong></td></tr>
-          </tbody>
-        </table>
-        <figcaption><strong>Table: Worked Split Example.</strong> The parent entropy is &minus;0.4 log<sub>2</sub>(0.4) &minus; 0.6 log<sub>2</sub>(0.6) = 0.971. The weighted child entropy is 0.4(0.811) + 0.6(0.650) = 0.715, so the information gain is 0.971 &minus; 0.715 = 0.256 bits. With Gini, the parent is 1 &minus; (0.4<sup>2</sup> + 0.6<sup>2</sup>) = 0.480, the weighted child impurity is 0.4(0.375) + 0.6(0.278) = 0.317, and the Gini gain is 0.163.</figcaption>
-      </figure>
-
-      <figure>
-        <img src="images/dt_entropy_split.png" alt="A split separating claims into more homogeneous groups and reducing entropy" style="width:100%; height:auto; display:block;">
-        <figcaption><strong>Figure: A Split That Reduces Entropy.</strong> The split separates the 10 claims into groups that are more homogeneous than the parent, lowering the weighted entropy from 0.971 to 0.715. A competing split with a higher information gain would be preferred.</figcaption>
-      </figure>
-
-      <h4>Why So Many Trees Are Possible</h4>
-
-      <p>In theory an unlimited number of different trees can be built from the same data. Different variables can be chosen at each node, the same variable can be reused at deeper levels, and the order of the splits can change. For a continuous predictor such as claim amount, the threshold can be any real number, and infinitely many real numbers lie between any two observed values, so there are infinitely many possible questions. A tree can also be grown to any depth, since every leaf can be split again. Different training samples and different stopping rules give still other trees. For a fixed, finite dataset, however, thresholds that fall between the same two neighboring observations produce the same partition, so the number of distinct partitions of the training records is finite, though extremely large. Because the tree is chosen greedily one split at a time, the final tree is also not guaranteed to be the best of all possible trees. This is why depth limits, minimum leaf sizes, pruning, and cross-validation are used to control complexity and prevent overfitting, where a tree memorizes the training data and performs worse on new claims.</p>
-    </section>
 
     <!-- DATA PREP -->
     <section id="data-prep" class="content-section">
@@ -160,13 +123,14 @@
     <section id="results" class="content-section">
       <h3>Results</h3>
 
-      <p>The decision tree addresses the early fraud detection part of the research question: whether claim, provider, and patient characteristics follow patterns that separate fraudulent claims from legitimate ones, and whether those patterns can be expressed as readable rules. It does not model claim frequency, severity, or premiums directly. Three different trees were built and are compared below. Tree 1 is the tuned model, whose settings were chosen by five-fold cross-validation on the training set, scored by precision-recall AUC. It used the entropy criterion, a maximum depth of 8, a minimum of 50 observations per leaf, and no additional cost-complexity pruning, with a cross-validated PR-AUC of 0.754. All trees used balanced class weights so the rare fraud class was not ignored, and all were evaluated on the same testing set of 2,000 claims, made up of 1,834 legitimate and 166 fraudulent claims.</p>
+      <p>The decision tree framework tackles the early fraud detection aspect of the research inquiry, examining whether attributes related to claims, providers, and patients reveal distinct patterns that distinguish fraudulent files from valid ones while translating those relationships into transparent rules. This approach does not directly evaluate claim frequency, severity, or premium pricing. To explore these dynamics, researchers constructed and compared three distinct models.</p>
+      <p>The tree represents the optimized version, featuring hyperparameters selected through five fold cross validation on the training data using the precision recall AUC metric. This configuration employed the entropy criterion, a maximum depth of eight, at least fifty observations per terminal leaf, and no extra cost complexity pruning, ultimately achieving a cross validated PR AUC score of 0.754. Every tree incorporated balanced class weights to ensure the minority fraud category received adequate attention, and all versions were tested against a standardized evaluation set consisting of 2,000 claims split into 1,834 legitimate submissions and 166 fraudulent cases.</p>
 
-      <h4>Tree 1: Tuned Tree (Entropy, Depth 4)</h4>
+      <h4>Tuned Tree (Entropy, Depth 4)</h4>
 
       <figure>
         <img src="images/decision_tree.png" alt="Top levels of the tuned decision tree" style="width:100%; height:auto; display:block;">
-        <figcaption><strong>Figure: Tree 1, Top Four Levels.</strong> Only the first four levels of the depth-8 tree are drawn. The class counts in each node are weighted by the balanced class weights, so they do not equal raw claim counts. The root split on <code>Service_Claim_days</code> at 6.5 days sends every claim filed more than 6.5 days after service to a pure legitimate leaf, and claims filed within 1.5 days form a pure fraud leaf. Claims filed between 1.5 and 6.5 days are separated further by claim amount and provider claim count.</figcaption>
+        <figcaption><strong>Figure: Top Four Levels.</strong> Only the first four levels of the depth-8 tree are drawn. The class counts in each node are weighted by the balanced class weights, so they do not equal raw claim counts. The root split on <code>Service_Claim_days</code> at 6.5 days sends every claim filed more than 6.5 days after service to a pure legitimate leaf, and claims filed within 1.5 days form a pure fraud leaf. Claims filed between 1.5 and 6.5 days are separated further by claim amount and provider claim count.</figcaption>
       </figure>
 
       <figure>
