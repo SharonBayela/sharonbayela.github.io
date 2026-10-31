@@ -67,6 +67,8 @@
 
       <p style="text-align:center; font-size:1.1rem;"><strong>Information Gain = Impurity(parent) &minus; &Sigma; (n<sub>j</sub> / n) &times; Impurity(child<sub>j</sub>)</strong></p>
 
+    </section>
+
     <!-- DATA PREP -->
     <section id="data-prep" class="content-section">
       <h3>Data Prep</h3>
@@ -124,18 +126,18 @@
       <h3>Results</h3>
 
       <p>The decision tree framework tackles the early fraud detection aspect of the research inquiry, examining whether attributes related to claims, providers, and patients reveal distinct patterns that distinguish fraudulent files from valid ones while translating those relationships into transparent rules. This approach does not directly evaluate claim frequency, severity, or premium pricing. To explore these dynamics, researchers constructed and compared three distinct models.</p>
-      <p>The tree represents the optimized version, featuring hyperparameters selected through five fold cross validation on the training data using the precision recall AUC metric. This configuration employed the entropy criterion, a maximum depth of eight, at least fifty observations per terminal leaf, and no extra cost complexity pruning, ultimately achieving a cross validated PR AUC score of 0.754. Every tree incorporated balanced class weights to ensure the minority fraud category received adequate attention, and all versions were tested against a standardized evaluation set consisting of 2,000 claims split into 1,834 legitimate submissions and 166 fraudulent cases.</p>
+      <p>The tuned decision tree is the optimized model, with hyperparameters selected through five fold cross validation on the training data using the precision recall AUC metric. This configuration employed the entropy criterion, a maximum depth of eight, at least fifty observations per terminal leaf, and no extra cost complexity pruning, ultimately achieving a cross validated PR AUC score of 0.754. The model used balanced class weights to ensure the minority fraud category received adequate attention, and it was evaluated on the testing set consisting of 2,000 claims split into 1,834 legitimate submissions and 166 fraudulent cases.</p>
 
-      <h4>Tuned Tree (Entropy, Depth 4)</h4>
+      <h4>Tuned Decision Tree (Entropy Criterion, Maximum Depth 8)</h4>
 
       <figure>
         <img src="images/decision_tree.png" alt="Top levels of the tuned decision tree" style="width:100%; height:auto; display:block;">
-        <figcaption><strong>Figure: Top Four Levels.</strong> Only the first four levels of the depth-8 tree are drawn. The class counts in each node are weighted by the balanced class weights, so they do not equal raw claim counts. The root split on <code>Service_Claim_days</code> at 6.5 days sends every claim filed more than 6.5 days after service to a pure legitimate leaf, and claims filed within 1.5 days form a pure fraud leaf. Claims filed between 1.5 and 6.5 days are separated further by claim amount and provider claim count.</figcaption>
+        <figcaption><strong>Figure: Tuned Decision Tree (Top Four Levels).</strong> Only the first four levels of the tree, which has a maximum depth of 8, are drawn. The class counts in each node are weighted by the balanced class weights, so they do not equal raw claim counts. The root split on <code>Service_Claim_days</code> at 6.5 days sends every claim filed more than 6.5 days after service to a pure legitimate leaf, and claims filed within 1.5 days form a pure fraud leaf. Claims filed between 1.5 and 6.5 days are separated further by claim amount and provider claim count.</figcaption>
       </figure>
 
       <figure>
         <table class="cluster-table">
-          <caption>Tree 1 Performance on the Test Set</caption>
+          <caption>Tuned Decision Tree Performance on the Test Set</caption>
           <thead>
             <tr>
               <th>Metric</th>
@@ -154,12 +156,12 @@
             <tr><td>False Negatives</td><td>10</td></tr>
           </tbody>
         </table>
-        <figcaption><strong>Table: Tree 1 Performance on the Test Set.</strong></figcaption>
+        <figcaption><strong>Table: Tuned Decision Tree Performance on the Test Set.</strong></figcaption>
       </figure>
 
       <figure>
         <table class="cluster-table">
-          <caption>Tree 1 Confusion Matrix (Test Set, n = 2,000)</caption>
+          <caption>Tuned Decision Tree Confusion Matrix (Test Set, n = 2,000)</caption>
           <thead>
             <tr>
               <th></th>
@@ -197,7 +199,7 @@
 
       <figure>
         <table class="cluster-table">
-          <caption>Most Important Features (Tree 1)</caption>
+          <caption>Most Important Features (Tuned Decision Tree)</caption>
           <thead>
             <tr>
               <th>Feature</th>
