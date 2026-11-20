@@ -18,7 +18,7 @@
   </div>
   <nav class="tabs-wrap" aria-label="Project sections">
     <ul class="tabs">
-     <li><a href="index.html">Introduction</a></li>
+      <li><a href="index.html">Introduction</a></li>
       <li><a href="dataprep_eda.html">Data Preparation and EDA</a></li>
       <li><a href="clustering.html">Clustering</a></li>
       <li><a href="pca.html">Principal Component Analysis</a></li>
@@ -36,15 +36,182 @@
   <div class="case-inner">
     <p class="eyebrow">Regression</p>
     <h2 class="page-title">Regression</h2>
-    <div class="placeholder">
-      <p class="eyebrow">Coming in a later module</p>
-      <p>This tab will model claim frequency and severity directly, using regression methods to quantify how strongly each risk factor relates to cost and rate of claims.</p>
-    </div>
-  </div>
-</main>
-<footer class="site-footer">
-  <span>Sharon Bayela &middot; Machine Learning for Data Science &middot; Fall 2026</span>
-  <span>Tab: Regression</span>
-</footer>
-</body>
-</html>
+
+    <!-- OVERVIEW -->
+    <section id="overview" class="content-section">
+      <h3>Overview</h3>
+
+      <p>Regression models describe how a target variable changes as other variables change, and they are the usual yardstick that more complicated models have to beat. Two forms are used here. Linear regression predicts a number, such as the dollar amount of a claim. Logistic regression predicts a class, such as whether a claim is legitimate or fraudulent. Both start from the same ingredient, a weighted sum of the predictors, and differ in what they do with it.</p>
+
+      <p>Linear regression fits the equation <strong>&ycirc; = b<sub>0</sub> + b<sub>1</sub>x<sub>1</sub> + &hellip; + b<sub>p</sub>x<sub>p</sub></strong>. The intercept b<sub>0</sub> is the prediction when every predictor is zero, and each slope b<sub>j</sub> is the change in the prediction when x<sub>j</sub> rises by one unit with the other predictors held fixed. The coefficients are chosen by least squares, which minimizes the sum of squared residuals, where a residual is the gap between the actual value and the prediction. Squaring keeps positive and negative misses from canceling and penalizes large misses more heavily. The fit is judged with RMSE and MAE, which are average errors in the units of the target, and with R<sup>2</sup>, the share of the variation in the target that the model explains. An R<sup>2</sup> of 0 means the model is no better than always predicting the average.</p>
+
+      <figure>
+        <img src="images/reg_linear_example.png" alt="Linear regression line with residuals on 60 training claims" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Linear Regression Line and Residuals.</strong> A line fitted to 60 training claims with one predictor, <code>Service_Claim_days</code>, so the idea can be seen in two dimensions. Each dashed segment is a residual. Least squares chooses the line that makes the total squared length of these gaps as small as possible. The actual model uses all 13 predictors at once.</figcaption>
+      </figure>
+
+      <p>Logistic regression is built for a two-class label. If it used a straight line to predict a 0/1 outcome, the predictions could fall below 0 or above 1, which makes no sense as a probability. Instead it computes the same kind of linear score, <strong>z = b<sub>0</sub> + b<sub>1</sub>x<sub>1</sub> + &hellip; + b<sub>p</sub>x<sub>p</sub></strong>, which is the log-odds of the class, and passes it through the sigmoid function <strong>p = 1 / (1 + e<sup>&minus;z</sup>)</strong>. The sigmoid squeezes any score into a probability between 0 and 1: a large positive score gives a probability near 1, a large negative score gives a probability near 0, and a score of 0 gives exactly 0.5. The probability becomes a class by applying a threshold, normally 0.5, so a claim is labeled fraud when p is at least 0.5. Because the score is linear, the boundary between the two classes is a straight line (or flat plane) in the predictor space.</p>
+
+      <figure>
+        <img src="images/reg_sigmoid.png" alt="Sigmoid curve mapping a linear score to a probability" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: The Sigmoid.</strong> A linear score z on the horizontal axis is converted into a probability on the vertical axis. The marked point shows a claim with a score of 2, which gives a fraud probability of 0.88 and is labeled fraud. Scores below 0 give probabilities below 0.5 and are labeled legitimate.</figcaption>
+      </figure>
+
+      <p>The two models differ in what they predict, how they are fitted, and how their coefficients are read. Linear regression predicts a continuous amount, is fitted by minimizing squared error, and reports a coefficient as a change in the target. Logistic regression predicts a probability and a class, is fitted by maximizing the likelihood of the observed labels (equivalently, minimizing log-loss), and reports a coefficient as a change in the log-odds, which is easiest to read after exponentiating it into an odds ratio. In this project linear regression is used for <strong>claim severity</strong>, predicting <code>Claim_Amount</code>, and logistic regression is used for <strong>fraud</strong>, predicting <code>Is_Fraud</code>.</p>
+    </section>
+
+    <!-- DATA PREP -->
+    <section id="data-prep" class="content-section">
+      <h3>Data Prep</h3>
+
+      <p>Supervised models learn from rows whose correct answers are already known, so each model needs a labeled target. The analysis uses the same health insurance claims dataset as the earlier tabs, with 10,000 claims and 23 variables. Two targets are used. For linear regression the target is the numeric column <code>Claim_Amount</code> (mean $572.80, ranging from $60.21 to $6,590.70). For logistic regression the target is the two-class label <code>Is_Fraud</code> (0 for a legitimate claim and 1 for a fraudulent claim), where 9,171 claims (91.71%) are legitimate and 829 (8.29%) are fraudulent.</p>
+
+      <p>Link to the labeled sample data (CSV): <a href="data/reg_prepared_data.csv" download>reg_prepared_data.csv</a></p>
+
+      <figure>
+        <img src="images/reg_data_sample.png" alt="Sample of the prepared claims data" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Prepared Claims Data Sample.</strong> A few rows of the data used for the regression models. <code>Claim_Amount</code> is the target for linear regression and <code>Is_Fraud</code> is the target for logistic regression. Only a subset of columns is shown.</figcaption>
+      </figure>
+
+      <p>The predictors are the same 14 variables used for the decision tree, with one change for the severity model. <code>Claim_Amount</code> is the target there, so it is removed from the predictors, leaving 13. The numeric predictors are <code>Patient_Age</code>, <code>No_of_Claims_Provider</code>, <code>Service_Claim_days</code>, <code>Length_of_Stay</code>, <code>Prior_Visits_12m</code>, and <code>Chronic_Condition_Flag</code>, and the categorical predictors are <code>Insurance_Type</code>, <code>Patient_Gender</code>, <code>Provider_Specialty</code>, <code>Visit_Type</code>, <code>State</code>, <code>Diagnosis_Code</code>, and <code>Procedure_Code</code>. <code>Approved_Amount</code>, <code>Premiums</code>, and <code>Claim_Status</code> were left out on purpose, because they are produced after or directly from the claim amount (<code>Approved_Amount</code> has a 0.94 correlation with <code>Claim_Amount</code>) and would give the model the answer it is supposed to predict.</p>
+
+      <p>Regression models need numbers, so each categorical variable was converted to 0/1 indicator columns with one-hot encoding. For linear regression one level of each category was dropped to serve as the reference level (for example Medicaid for <code>Insurance_Type</code>, and procedure 36415 for <code>Procedure_Code</code>), which gives 43 features and makes each remaining coefficient a difference from that reference. Logistic regression kept every level and gave 51 features. Logistic regression is also sensitive to the scale of its inputs, so the numeric columns were standardized (mean 0, standard deviation 1) using values learned from the training set alone.</p>
+
+      <h4>Training and Testing Sets</h4>
+
+      <p>The labeled data was divided into a training set, used to build each model, and a testing set, used once at the end to measure how well the model predicts claims it has never seen. The split was 80/20 with Scikit-learn's <code>train_test_split</code> and <code>random_state=42</code>, stratified on <code>Is_Fraud</code> so both sets have the same fraud rate. It is the identical split used for Naive Bayes and the decision tree, so the results on this tab can be compared directly with those models. The split was made before any encoding or scaling, so every learned value came from the training set only.</p>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Training and Testing Split</caption>
+          <thead><tr><th>Dataset</th><th>Observations</th><th>Legitimate</th><th>Fraudulent</th><th>Mean Claim_Amount</th></tr></thead>
+          <tbody>
+            <tr><td>Training</td><td>8,000</td><td>7,337</td><td>663</td><td>$572.65</td></tr>
+            <tr><td>Testing</td><td>2,000</td><td>1,834</td><td>166</td><td>$573.44</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Training and Testing Split.</strong> The two sets hold 80% and 20% of the claims, with about 8.3% fraud in each.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/reg_train_test_split.png" alt="80 percent training and 20 percent testing split" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: 80/20 Split.</strong> How the claims were divided into training and testing sets.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/reg_train_sample.png" alt="Sample of the training set" style="width:100%; height:auto; display:block;">
+        <img src="images/reg_test_sample.png" alt="Sample of the testing set" style="width:100%; height:auto; display:block; margin-top:1rem;">
+        <figcaption><strong>Figure: Training and Testing Samples.</strong> The first rows of each set. The full files are available in the code repository.</figcaption>
+      </figure>
+
+      <p>The two sets must be disjoint, meaning that no claim appears in both. If the model were tested on claims it had already seen, it could be scored on memory instead of on its ability to predict new claims, and the reported accuracy would be too optimistic. The code checks this directly by counting the rows shared by the two sets, and the count is 0.</p>
+    </section>
+
+    <!-- CODE -->
+    <section id="code" class="content-section">
+      <h3>Code</h3>
+
+      <p>The models were fitted in Python with scikit-learn: <code>LinearRegression</code> for claim severity and <code>LogisticRegression</code> for fraud. The logistic model uses <code>class_weight="balanced"</code> so that the 8.3% fraud class is not ignored, matching the decision tree.</p>
+
+<pre><code>lin = LinearRegression().fit(Xtr_lin, ytr_lin)                 # target: Claim_Amount
+logit = LogisticRegression(class_weight="balanced",
+                           max_iter=5000, random_state=42)
+logit.fit(Xtr_log, ytr_log)                                    # target: Is_Fraud</code></pre>
+
+      <p>
+        <a href="https://github.com/SharonBayela/Machine_learning_project_F26.git" target="_blank" rel="noopener">View the full regression code on GitHub</a>
+      </p>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="results" class="content-section">
+      <h3>Results</h3>
+
+      <h4>Linear Regression: Predicting Claim Severity</h4>
+
+      <p>The linear regression was evaluated on the 2,000 test claims. To judge whether it learned anything, it is compared with a baseline that always predicts the training average claim of $572.65.</p>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Linear Regression Performance on the Test Set</caption>
+          <thead><tr><th>Metric</th><th>Linear Regression</th><th>Baseline (always predict the mean)</th></tr></thead>
+          <tbody>
+            <tr><td>RMSE</td><td>$425.95</td><td>$431.18</td></tr>
+            <tr><td>MAE</td><td>$288.89</td><td>$292.47</td></tr>
+            <tr><td>R&sup2;</td><td>0.024</td><td>0.000</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Linear Regression Performance.</strong> The model's typical error is about $426, only $5 better than guessing the average claim every time. Training R&sup2; was 0.020, so the weak fit is not caused by overfitting.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/reg_pred_vs_actual.png" alt="Predicted versus actual claim amounts for linear regression" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Predicted vs Actual Claim Amount.</strong> If the model were accurate the points would follow the dashed diagonal. Instead the predictions stay in a narrow band of roughly $450 to $750 while actual claims range from about $60 to $6,590, so the model cannot tell cheap claims from expensive ones. The right panel zooms in on claims under $2,000.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/reg_linear_example.png" alt="Linear regression line and residuals on 60 training claims" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Fitted Line and Residuals.</strong> The fitted line slopes only slightly downward and the points scatter widely around it, with many residuals of several hundred dollars. This one-predictor view matches the full model's weak fit (R&sup2; = 0.024): knowing <code>Service_Claim_days</code> barely narrows down the claim amount.</figcaption>
+      </figure>
+
+      <p>Two coefficients show how small the effects are. The coefficient for <code>Service_Claim_days</code> is &minus;5.53, so each additional day between the service and the claim submission is associated with a claim about $5.53 lower, holding the other variables fixed. The coefficient for <code>Chronic_Condition_Flag</code> is &minus;10.60, so a patient with a chronic condition is associated with a claim about $10.60 lower than a similar patient without one, which runs against the common expectation that chronic patients cost more. Both amounts are tiny compared with the $426 typical error, and the largest coefficient in the model (procedure 99214, +$44.05 compared with procedure 36415) is also small. Claim amount in this dataset is therefore not explained by patient, provider, or policy characteristics in a linear way.</p>
+
+      <p>As a check, the fraud label was added as an extra predictor. R&sup2; rose to 0.116 and the <code>Is_Fraud</code> coefficient was +$430.39, which matches the data: fraudulent claims average $990.93 and legitimate claims average $535.01. Fraud status is the only variable found to be strongly related to claim size, but it is known only after a claim is reviewed, so it cannot be used to price a claim in advance.</p>
+
+      <h4>Logistic Regression: Predicting Fraud</h4>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Logistic Regression Performance on the Test Set</caption>
+          <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td>Accuracy</td><td>86.40%</td></tr>
+            <tr><td>ROC-AUC</td><td>0.960</td></tr>
+            <tr><td>PR-AUC (baseline 0.083)</td><td>0.707</td></tr>
+            <tr><td>Fraud Precision</td><td>37.38%</td></tr>
+            <tr><td>Fraud Recall</td><td>94.58%</td></tr>
+            <tr><td>Fraud F1-Score</td><td>0.536</td></tr>
+            <tr><td>Specificity (Legitimate Recall)</td><td>85.66%</td></tr>
+            <tr><td>False Positives</td><td>263</td></tr>
+            <tr><td>False Negatives</td><td>9</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Logistic Regression Performance on the Test Set.</strong></figcaption>
+      </figure>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Logistic Regression Confusion Matrix (Test Set, n = 2,000)</caption>
+          <thead><tr><th></th><th>Predicted Legitimate</th><th>Predicted Fraud</th><th>Total</th></tr></thead>
+          <tbody>
+            <tr><td>Actual Legitimate</td><td>1,571</td><td>263</td><td>1,834</td></tr>
+            <tr><td>Actual Fraud</td><td>9</td><td>157</td><td>166</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Confusion Matrix.</strong> The model correctly classified 1,571 legitimate and 157 fraudulent claims, flagged 263 legitimate claims as fraud, and missed 9 fraudulent claims.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/reg_confusion_matrix.png" alt="Logistic regression confusion matrix, counts and normalized by true class" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Confusion Matrix.</strong> The left panel shows counts and the right panel shows the share of each true class. The model identified about 95% of fraudulent claims and 86% of legitimate claims correctly.</figcaption>
+      </figure>
+
+      <p>As with the decision tree, accuracy alone is misleading. A model that labeled every claim legitimate would be correct 91.70% of the time and would detect no fraud, so the 86.40% accuracy is lower than that baseline because the model deliberately trades accuracy for fraud detection. The more informative numbers are recall and precision. The model caught 157 of 166 fraudulent claims, and 37.38% of the 420 claims it flagged were truly fraudulent, about 4.5 times the 8.3% fraud rate in the test set.</p>
+
+      <figure>
+        <img src="images/reg_sigmoid.png" alt="Sigmoid curve mapping a linear score to a fraud probability" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: From Score to Fraud Probability.</strong> The fitted model's score for each claim is passed through this curve. Claims filed quickly and for larger amounts receive high scores and fraud probabilities near 1, while late, smaller claims receive low scores and probabilities near 0.</figcaption>
+      </figure>
+
+      <p>Because the numeric predictors were standardized, a logistic coefficient is a change in the log-odds per one standard deviation, and it can be converted back to original units. For <code>Service_Claim_days</code> the coefficient is &minus;5.69 per standard deviation (8.5 days), which means that each additional day between service and submission multiplies the odds of fraud by about 0.51, so the odds roughly halve with every extra day. For <code>Claim_Amount</code> the coefficient is +0.96 per standard deviation ($400), so each additional $100 on the claim multiplies the odds of fraud by about 1.27, an increase of 27%. Submitting quickly and claiming a larger amount both point toward fraud, which agrees with the decision tree.</p>
+
+      <h4>Comparison with Naive Bayes and the Decision Tree</h4>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Fraud Models Compared on the Same Test Set</caption>
+          <thead><tr><th>Metric</th><th>Naive Bayes</th><th>Logistic Regression</th><th>Decision Tree</th></tr></thead>
+          <tbody>
+            <tr><td>Accuracy</td><td>85.1%</td><td>86.4%</td><td>87.4%</td></tr>
+            <tr><td>Fraud Recall</td><td>98.2%</td><td>94.6%</td><td>94.0%</td></tr>
+            <tr><td>Fraud Precision</td><td>35.6%</td>
