@@ -144,43 +144,25 @@
       <p>The two sets must be disjoint, meaning that no claim appears in both. If the model were tested on claims it had already seen, the test would measure memory instead of the ability to predict new claims, and the accuracy would be misleadingly high. AdaBoost keeps re-fitting the training claims it finds hardest, so it is a model that could easily over-fit them. The code checks that the two sets share 0 rows. The settings of the model, the number of rounds and the learning rate, were chosen using only the training set (a validation split and five-fold cross validation), so the testing set influenced none of the modeling decisions.</p>
     </section>
 
-    <!-- CODE -->
-    <section id="code" class="content-section">
-      <h3>Code</h3>
-
-      <p>The model was fitted in Python with scikit-learn's <code>AdaBoostClassifier</code>, using a decision stump (a tree of depth 1) as the weak learner. No class weights were applied to the stumps, because AdaBoost already re-weights the claims it misclassifies from round to round.</p>
-
-<pre><code>from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import AdaBoostClassifier
-
-stump = lambda: DecisionTreeClassifier(max_depth=1, random_state=42)
-
-grid = GridSearchCV(AdaBoostClassifier(estimator=stump(), random_state=42),
-                    {"n_estimators": [50, 100, 200, 400],
-                     "learning_rate": [0.05, 0.1, 0.5, 1.0]},
-                    cv=StratifiedKFold(5, shuffle=True, random_state=42),
-                    scoring="average_precision")
-grid.fit(X_train_oh, y_train)
-model = grid.best_estimator_            # learning_rate 0.5, 400 stumps</code></pre>
-
       <p>
-        <a href="https://github.com/SharonBayela/Machine_learning_project_F26.git" target="_blank" rel="noopener">View the full AdaBoost code on GitHub</a>
-      </p>
-    </section>
+      <a href="https://github.com/SharonBayela/Machine_learning_project_F26.git" target="_blank" rel="noopener">
+          View the code on GitHub
+      </a>
+    </p>
 
     <!-- RESULTS -->
     <section id="results" class="content-section">
       <h3>Results</h3>
 
-      <p>The AdaBoost model addresses the early fraud detection part of the research question, so, like the decision tree, it predicts whether a claim is fraudulent. It does not predict claim amounts, claim frequency, or premiums.</p>
+      <p>AdaBoost predicts whether a claim is fraudulent. It does not predict claim amounts, frequency, or premiums.</p>
 
       <h4>Tuning the Number of Rounds and the Learning Rate</h4>
 
-      <p>Two settings control AdaBoost: the number of rounds (<code>n_estimators</code>, how many stumps are added) and the learning rate (how much each stump counts). To see how they matter, a quarter of the training set was held out as a validation set, and the model was trained on the remaining three quarters with four learning rates. Accuracy on the validation set was recorded after every round, up to 400.</p>
+      <p>A quarter of the training set was held out as a validation set. Models with four learning rates were trained on the rest, and validation accuracy was recorded after each of 400 rounds.</p>
 
       <figure>
         <img src="images/ab_validation_curve.png" alt="Validation accuracy by number of AdaBoost rounds for four learning rates" style="width:100%; height:auto; display:block;">
-        <figcaption><strong>Figure: Validation Accuracy as Rounds Are Added.</strong> Every curve starts near 0.917, the accuracy of calling every claim legitimate, and climbs as stumps are added. Larger learning rates learn faster: 0.5 and 1.0 reach about 0.95 within roughly 50 rounds, while 0.1 needs about 275 rounds and 0.05 never rises above 0.940 within 400 rounds. The learning rate of 1.0 peaks early and then slips slightly (0.9535 at round 100, 0.9510 at round 400), a sign of fitting noise, while the curves for 0.5 and 0.1 stay flat after their peaks.</figcaption>
+        <figcaption><strong>Figure: Validation Accuracy as Rounds Are Added.</strong> All curves start near 0.917, the accuracy of calling every claim legitimate. Rates 0.5 and 1.0 reach about 0.95 within roughly 50 rounds, 0.1 needs about 275, and 0.05 stays at 0.940. Rate 1.0 slips slightly after its peak.</figcaption>
       </figure>
 
       <figure>
@@ -194,10 +176,10 @@ model = grid.best_estimator_            # learning_rate 0.5, 400 stumps</code></
             <tr><td>1.0</td><td>0.9535</td><td>100</td><td>0.9510</td></tr>
           </tbody>
         </table>
-        <figcaption><strong>Table: Validation Accuracy by Learning Rate.</strong> A learning rate of 0.5 gave the highest validation accuracy and reached it soonest.</figcaption>
+        <figcaption><strong>Table: Validation Accuracy by Learning Rate.</strong> A rate of 0.5 was best and reached its peak soonest.</figcaption>
       </figure>
 
-      <p>Because accuracy hides the fraud class (91.7% of claims are legitimate), the final settings were chosen with five-fold cross validation on the whole training set, scored by the area under the precision-recall curve (PR-AUC). Sixteen combinations of rounds and learning rate were tried.</p>
+      <p>Because accuracy hides the rare fraud class, the final settings were chosen with five-fold cross validation on the training set, scored by PR-AUC.</p>
 
       <figure>
         <table class="cluster-table">
@@ -210,12 +192,12 @@ model = grid.best_estimator_            # learning_rate 0.5, 400 stumps</code></
             <tr><td>1.00</td><td>0.745</td><td>0.773</td><td>0.785</td><td>0.785</td></tr>
           </tbody>
         </table>
-        <figcaption><strong>Table: Cross-Validated PR-AUC.</strong> The best setting was a learning rate of 0.5 with 400 rounds (PR-AUC 0.786). Small learning rates need many more rounds to catch up, and a learning rate of 1.0 stops improving after 200 rounds.</figcaption>
+        <figcaption><strong>Table: Cross-Validated PR-AUC.</strong> The best setting is a learning rate of 0.5 with 400 rounds (0.786).</figcaption>
       </figure>
 
       <h4>Final AdaBoost Model (Learning Rate 0.5, 400 Stumps)</h4>
 
-      <p>The tuned model was refit on the full training set and evaluated once on the testing set of 2,000 claims, which contains 1,834 legitimate claims and 166 fraudulent claims. In the first rounds the stumps were fairly accurate and received large vote weights: the first five stumps had weighted errors of 0.083, 0.136, 0.192, 0.236, and 0.275 and vote weights of 1.20, 0.93, 0.72, 0.59, and 0.48. Each later stump faces a harder, re-weighted problem, so its error rises and its vote weight falls, which is the behavior described in the Overview. (Scikit-learn multiplies the log-odds by the learning rate, and at 0.5 this equals the &frac12; in the textbook formula.)</p>
+      <p>The tuned model was refit on the full training set and tested once on the 2,000 test claims. The first five stumps had weighted errors of 0.083, 0.136, 0.192, 0.236, and 0.275 and vote weights of 1.20, 0.93, 0.72, 0.59, and 0.48. Later stumps face harder re-weighted problems, so their errors rise and their vote weights fall.</p>
 
       <figure>
         <table class="cluster-table">
@@ -245,19 +227,19 @@ model = grid.best_estimator_            # learning_rate 0.5, 400 stumps</code></
             <tr><td>Actual Fraud</td><td>60</td><td>106</td><td>166</td></tr>
           </tbody>
         </table>
-        <figcaption><strong>Table: Confusion Matrix.</strong> The model correctly classified 1,806 legitimate and 106 fraudulent claims, flagged 28 legitimate claims as fraud, and missed 60 fraudulent claims.</figcaption>
+        <figcaption><strong>Table: Confusion Matrix.</strong> 106 of 166 fraudulent claims were caught, with 28 false alarms.</figcaption>
       </figure>
 
       <figure>
         <img src="images/ab_confusion_matrix.png" alt="AdaBoost confusion matrix, counts and normalized by true class" style="width:100%; height:auto; display:block;">
-        <figcaption><strong>Figure: Confusion Matrix.</strong> The left panel shows counts and the right panel shows the share of each true class. The model identified 98% of legitimate claims and 64% of fraudulent claims correctly.</figcaption>
+        <figcaption><strong>Figure: Confusion Matrix.</strong> Counts (left) and share of each true class (right): 98% of legitimate and 64% of fraudulent claims were classified correctly.</figcaption>
       </figure>
 
-      <p>The accuracy of 95.60% is above the 91.70% that a model labeling every claim legitimate would reach, so, unlike the earlier fraud models, AdaBoost beats the no-skill baseline on accuracy. The more informative measures are precision and recall. Of the 134 claims the model flagged, 106 were truly fraudulent (79.10%), roughly 9.5 times the 8.3% fraud rate in the test set, and it flagged only about 6.7% of all claims. The cost is recall: it found 106 of the 166 fraudulent claims (63.86%) and missed 60.</p>
+      <p>Accuracy (95.60%) beats the 91.70% of labeling every claim legitimate. Of the 134 claims flagged, 79.10% were fraudulent, about 9.5 times the base rate. The cost is recall: 60 fraudulent claims were missed.</p>
 
       <figure>
         <img src="images/ab_importance.png" alt="AdaBoost feature importance" style="width:100%; height:auto; display:block;">
-        <figcaption><strong>Figure: AdaBoost Feature Importance.</strong> Importance is the share of the model's total split quality that each feature supplies. <code>Service_Claim_days</code> accounts for about 82% of it, <code>Claim_Amount</code> for about 13%, and <code>No_of_Claims_Provider</code> for about 4%. Every other feature contributes less than 0.5%. These importances are descriptive and are not evidence that any characteristic causes fraud.</figcaption>
+        <figcaption><strong>Figure: AdaBoost Feature Importance.</strong> <code>Service_Claim_days</code> supplies about 82%, <code>Claim_Amount</code> 13%, and <code>No_of_Claims_Provider</code> 4%. Every other feature is under 0.5%. Importance is descriptive, not causal.</figcaption>
       </figure>
 
       <h4>Comparison with the Decision Tree</h4>
@@ -276,33 +258,19 @@ model = grid.best_estimator_            # learning_rate 0.5, 400 stumps</code></
             <tr><td>False Negatives</td><td>10</td><td>60</td><td>+50</td></tr>
           </tbody>
         </table>
-        <figcaption><strong>Table: AdaBoost and the Decision Tree.</strong> Both models used the same 80/20 split and the same 14 predictors.</figcaption>
+        <figcaption><strong>Table: AdaBoost and the Decision Tree.</strong> Same 80/20 split and the same 14 predictors.</figcaption>
       </figure>
 
-      <p>AdaBoost did better overall. Its accuracy was 8.25 percentage points higher, its precision was about twice as high (79.1% versus 39.1%), it raised only 28 false alarms instead of 243, and it scored higher on both ROC-AUC (0.973 versus 0.966) and PR-AUC (0.803 versus 0.761). The tree, however, caught far more fraud (156 of 166 claims versus 106), so the two models sit at different points of the precision and recall trade-off. That difference is partly a design choice. The tree was trained with balanced class weights to favor recall, while AdaBoost used the default 0.5 cutoff with no class weights. The threshold-free measures give the fairest comparison, and they show a real but moderate improvement for AdaBoost (PR-AUC +0.042, ROC-AUC +0.007). Both models also agree on what matters most, since each is driven mainly by <code>Service_Claim_days</code> and then <code>Claim_Amount</code>.</p>
+      <p>AdaBoost did better overall: accuracy +8.25 points, precision about double, 215 fewer false alarms, and higher ROC-AUC and PR-AUC. The tree caught far more fraud (156 versus 106 claims). Part of that gap is a design choice, since the tree used balanced class weights and AdaBoost did not, so the threshold-free AUC gains (+0.007 and +0.042) are the fairest comparison.</p>
     </section>
 
     <!-- CONCLUSIONS -->
     <section id="conclusions" class="content-section">
       <h3>Conclusions</h3>
 
-      <p>AdaBoost strengthened the fraud detection results. The tuned model, 400 stumps with a learning rate of 0.5, reached an accuracy of 95.6%, an ROC-AUC of 0.973, and a PR-AUC of 0.803, the best scores among the models tested so far. When it flagged a claim, the claim was fraudulent 79.1% of the time, about twice the precision of the decision tree, and it raised only 28 false alarms out of 1,834 legitimate claims. For an insurer, this means a reviewer's time is far better spent, since nearly four in five flagged claims are worth investigating. The price is that 60 of the 166 fraudulent claims (36%) were not flagged. The result also shows how boosting works in practice: no single stump is accurate, but the weighted vote of hundreds of stumps, each focused on the claims its predecessors misjudged, produced a much more precise classifier than one tree.</p>
+      <p>AdaBoost gave the strongest fraud results so far: accuracy 95.6%, ROC-AUC 0.973, and PR-AUC 0.803. Flagged claims were fraudulent 79.1% of the time, with only 28 false alarms, so reviewer time is far better spent. The price is that 60 of 166 fraudulent claims (36%) were missed.</p>
 
-      <p>The model also repeats a message from the earlier tabs. About 82% of its importance comes from <code>Service_Claim_days</code>, with a further 13% from <code>Claim_Amount</code> and 4% from <code>No_of_Claims_Provider</code>, while patient, insurance, state, and diagnosis characteristics contributed almost nothing. Fraud in this dataset is therefore mainly a pattern of claims submitted soon after service, for larger amounts, by providers with many claims, all of which are known when a claim arrives. This supports the early fraud detection goal of the project, but it does not answer the pricing side. AdaBoost predicts a class, so it says nothing about how much a claim will cost or how often claims occur, and the linear regression on the previous tab found that claim cost was barely explained by the available characteristics. Fraud scores from this model could serve as an additional input for risk-based pricing, while severity and frequency still depend on the models that follow.</p>
+      <p>The model repeats the earlier message: <code>Service_Claim_days</code> supplies about 82% of the importance, then <code>Claim_Amount</code> (13%). Fraud here is mainly claims filed soon after service, for larger amounts, by high-volume providers, all known at submission. This supports early fraud detection but says nothing about claim cost or frequency, which the regression tab found hard to predict.</p>
 
-      <p>Several limits apply. The testing set holds only 166 fraudulent claims, so each missed or caught claim moves the recall by about 0.6 points. The best number of rounds (400) is the largest value tried, so the tuned model might improve with more rounds. AdaBoost and the decision tree also operate at different cutoffs, so the gap in precision and recall is partly a matter of threshold and not only of model quality, and a lower cutoff would let AdaBoost trade some precision for more recall. Finally, the patterns are very clean (one variable explains most of the signal), which suggests the data may be synthetic and that real claims could be harder to separate. The next two models, gradient boosting and XGBoost, build on the same idea and will show whether fitting each new tree to the remaining errors, instead of re-weighting claims, can improve on both fraud detection and the weak severity predictions.</p>
+      <p>Limits: 166 fraudulent test claims, the best number of rounds (400) is the edge of the grid, the tree and AdaBoost use different cutoffs, and clean patterns suggest synthetic data. Gradient boosting and XGBoost will test whether fitting trees to remaining errors improves fraud detection and the weak severity predictions.</p>
     </section>
-
-    <p>
-      <a href="https://github.com/SharonBayela/Machine_learning_project_F26.git" target="_blank" rel="noopener">
-          View the code on GitHub
-      </a>
-    </p>
-  </div>
-</main>
-<footer class="site-footer">
-  <span>Sharon Bayela &middot; Machine Learning for Data Science &middot; Fall 2026</span>
-  <span>Tab: Ada Boost</span>
-</footer>
-</body>
-</html>
