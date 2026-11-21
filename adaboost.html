@@ -35,11 +35,251 @@
 <main id="main" class="case-file">
   <div class="case-inner">
     <p class="eyebrow">Ada Boost</p>
-    <h2 class="page-title">Ada Boost</h2>
-    <div class="placeholder">
-      <p class="eyebrow">Coming in a later module</p>
-      <p>This tab will apply ada boost to classify claims data and compare performance against other methods used elsewhere in the project.</p>
-    </div>
+    <h2 class="page-title">AdaBoost</h2>
+
+    <!-- OVERVIEW -->
+    <section id="overview" class="content-section">
+      <h3>Overview</h3>
+
+      <p>Boosting is an ensemble method that builds a strong classifier by combining many weak ones, where each weak model is only slightly better than guessing. The models are built one after another, and each new model concentrates on the cases that the earlier models got wrong. This is different from bagging, which was used in the random forest. Bagging trains many deep trees at the same time, each on a random sample of the data, and lets them vote equally, which lowers variance. Boosting trains small models in sequence on the same data, and each model is shaped by the mistakes of those before it, which lowers bias. Bagging is a crowd of independent opinions, while boosting is a relay in which each runner fixes what the last one missed.</p>
+
+      <figure>
+        <img src="images/ab_bagging_vs_boosting.png" alt="Diagram comparing bagging with boosting" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Bagging vs Boosting.</strong> Bagging (left) grows independent trees on random samples and combines them with an equal majority vote. Boosting (right) trains one stump after another, re-weights the rows that were misclassified, and combines the stumps with a weighted vote in which more accurate stumps count more.</figcaption>
+      </figure>
+
+      <p>AdaBoost (Adaptive Boosting) is the classic boosting algorithm, and its weak model is a <strong>decision stump</strong>, a decision tree with a single split. A stump asks one yes/no question about one variable, for example &ldquo;was the claim filed within 6.5 days of the service?&rdquo;, and predicts a class for each side. A single stump is a very weak classifier, but a few hundred of them, each focused on different difficult cases, can form a strong one.</p>
+
+      <p>AdaBoost works in rounds. It begins by giving every training claim the same weight. In each round it fits a stump to the weighted data and measures the stump's weighted error &epsilon;, the total weight of the claims it misclassified. It then gives the stump a vote weight, <strong>&alpha; = &frac12; ln((1 &minus; &epsilon;) / &epsilon;)</strong>. A stump that is nearly always right has a small &epsilon; and a large &alpha;, a stump that is barely better than a coin flip (&epsilon; close to 0.5) has an &alpha; near zero, and a stump worse than a coin flip would get a negative &alpha;. After each round the claim weights are updated with <strong>w<sub>i</sub> &larr; w<sub>i</sub> &middot; e<sup>&minus;&alpha; y<sub>i</sub> h(x<sub>i</sub>)</sup></strong> and then rescaled to sum to 1, where y<sub>i</sub> and h(x<sub>i</sub>) are the true and predicted labels coded as &minus;1 or +1. Claims the stump got right shrink in weight, and claims it got wrong grow, so the next stump is forced to pay attention to them.</p>
+
+      <figure>
+        <img src="images/ab_reweighting.png" alt="Three rounds of AdaBoost re-weighting on real claims" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Three Rounds of AdaBoost on Real Claims.</strong> A small illustration sample of 140 training claims (110 legitimate and 30 fraudulent, so the fraud class is easy to see) plotted by <code>Service_Claim_days</code> and <code>Claim_Amount</code>. Point size shows each claim's current weight, and the black line is that round's stump. In round 1 every claim has the same weight. After each round the claims the stump misclassified become larger, and the next stump is fitted to the re-weighted data. The weighted error and &alpha; of each round are shown above the panels.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/ab_alpha_curve.png" alt="Curve showing the stump vote weight alpha as a function of its weighted error" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: The Stump Weight &alpha;.</strong> A stump with a weighted error of 0.10 receives a vote weight of 1.10, while a stump with an error of 0.30 receives only 0.42. At an error of 0.5, which is no better than guessing, the weight falls to zero.</figcaption>
+      </figure>
+
+      <p>The final prediction is a <strong>weighted vote</strong> of all the stumps, <strong>H(x) = sign( &alpha;<sub>1</sub>h<sub>1</sub>(x) + &alpha;<sub>2</sub>h<sub>2</sub>(x) + &hellip; + &alpha;<sub>M</sub>h<sub>M</sub>(x) )</strong>. Each stump votes +1 for fraud or &minus;1 for legitimate, the votes are multiplied by the stumps' &alpha; values, and the sign of the total gives the class. A learning rate between 0 and 1 shrinks each stump's contribution, which makes the model learn more slowly and often more carefully, and the number of rounds controls how many stumps are added. These two settings are tuned in the Results section. AdaBoost is a classifier, so in this project it is used for the fraud label and not for claim amounts.</p>
+    </section>
+
+    <!-- DATA PREP -->
+    <section id="data-prep" class="content-section">
+      <h3>Data Prep</h3>
+
+      <p>Supervised models learn from rows whose correct answers are already known, so AdaBoost needs a labeled target. The analysis uses the same health insurance claims dataset as the earlier tabs, with 10,000 claims and 23 variables, and <code>Is_Fraud</code> supplies the known labels (0 for a legitimate claim and 1 for a fraudulent claim). The classes are imbalanced, with 9,171 legitimate claims (91.71%) and 829 fraudulent claims (8.29%).</p>
+
+      <p>Link to the labeled sample data (CSV): <a href="data/ab_prepared_data.csv" download>ab_prepared_data.csv</a></p>
+
+      <figure>
+        <img src="images/ab_data_sample.png" alt="Sample of the labeled claims data" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Labeled Claims Data Sample.</strong> A few rows of the data used for AdaBoost. The last column, <code>Is_Fraud</code>, is the known class label. Only a subset of the 14 predictors is shown.</figcaption>
+      </figure>
+
+      <p>The 14 predictors are the same ones used for the decision tree: <code>Claim_Amount</code>, <code>Patient_Age</code>, <code>No_of_Claims_Provider</code>, <code>Service_Claim_days</code>, <code>Length_of_Stay</code>, <code>Prior_Visits_12m</code>, <code>Chronic_Condition_Flag</code>, <code>Insurance_Type</code>, <code>Patient_Gender</code>, <code>Provider_Specialty</code>, <code>Visit_Type</code>, <code>State</code>, <code>Diagnosis_Code</code>, and <code>Procedure_Code</code>. The target was excluded from the predictors so the model never sees the outcome it is trying to predict.</p>
+
+      <h4>Converting Categorical Columns to Numbers</h4>
+
+      <p>AdaBoost in scikit-learn needs numeric inputs, and seven of the predictors are categories (insurance type, gender, specialty, visit type, state, diagnosis code, and procedure code). Each one was converted with one-hot encoding, which replaces a category column with one 0/1 column per category. For example, <code>Insurance_Type</code> has five values, so it becomes five columns, and each claim has a 1 in the column that matches its insurance type and 0 in the others. The seven numeric predictors were left unchanged, because the stumps choose their own split thresholds and do not need scaling. The encoding produced 51 numeric features in total. The encoded columns were defined from the training set, and the testing set was lined up to those same columns, so the testing set had no influence on the encoding.</p>
+
+      <figure>
+        <img src="images/ab_encoded_sample.png" alt="Sample of the one-hot encoded data" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Data After One-Hot Encoding.</strong> A few of the 51 numeric columns after encoding. Every column is now a number that AdaBoost can split on.</figcaption>
+      </figure>
+
+      <p>The step on one column, <code>Insurance_Type</code>, is shown below. The first three training claims are Medicaid, Private, and Self-Pay, and each becomes a row with a single 1 in the matching column.</p>
+
+<pre><code>      Insurance_Type  Insurance_Type_Medicaid  Insurance_Type_Medicare  Insurance_Type_Other  Insurance_Type_Private  Insurance_Type_Self-Pay
+9326        Medicaid                        1                        0                     0                       0                        0
+5375         Private                        0                        0                     0                       1                        0
+1146        Self-Pay                        0                        0                     0                       0                        1</code></pre>
+
+      <h4>Training and Testing Sets</h4>
+
+      <p>The labeled data was divided into a training set, used to build and tune the model, and a testing set, used once at the end to measure how well the model predicts claims it has never seen. The split was 80/20 with Scikit-learn's <code>train_test_split</code> and <code>random_state=42</code>, stratified on <code>Is_Fraud</code> so that both sets have the same fraud rate. It is the identical split used for Naive Bayes, the decision tree, and logistic regression, so the results can be compared directly.</p>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Training and Testing Split</caption>
+          <thead><tr><th>Dataset</th><th>Observations</th><th>Legitimate</th><th>Fraudulent</th><th>Encoded Features</th></tr></thead>
+          <tbody>
+            <tr><td>Training</td><td>8,000</td><td>7,337</td><td>663</td><td>51</td></tr>
+            <tr><td>Testing</td><td>2,000</td><td>1,834</td><td>166</td><td>51</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Training and Testing Split.</strong> About 8.3% of the claims are fraudulent in both sets.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/ab_train_test_split.png" alt="80 percent training and 20 percent testing split" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: 80/20 Split.</strong> How the claims were divided into training and testing sets.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/ab_train_sample.png" alt="Sample of the training set" style="width:100%; height:auto; display:block;">
+        <img src="images/ab_test_sample.png" alt="Sample of the testing set" style="width:100%; height:auto; display:block; margin-top:1rem;">
+        <figcaption><strong>Figure: Training and Testing Samples.</strong> The first rows of each set. The full data is available in the code repository.</figcaption>
+      </figure>
+
+      <p>The two sets must be disjoint, meaning that no claim appears in both. If the model were tested on claims it had already seen, the test would measure memory instead of the ability to predict new claims, and the accuracy would be misleadingly high. AdaBoost keeps re-fitting the training claims it finds hardest, so it is a model that could easily over-fit them. The code checks that the two sets share 0 rows. The settings of the model, the number of rounds and the learning rate, were chosen using only the training set (a validation split and five-fold cross validation), so the testing set influenced none of the modeling decisions.</p>
+    </section>
+
+    <!-- CODE -->
+    <section id="code" class="content-section">
+      <h3>Code</h3>
+
+      <p>The model was fitted in Python with scikit-learn's <code>AdaBoostClassifier</code>, using a decision stump (a tree of depth 1) as the weak learner. No class weights were applied to the stumps, because AdaBoost already re-weights the claims it misclassifies from round to round.</p>
+
+<pre><code>from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import AdaBoostClassifier
+
+stump = lambda: DecisionTreeClassifier(max_depth=1, random_state=42)
+
+grid = GridSearchCV(AdaBoostClassifier(estimator=stump(), random_state=42),
+                    {"n_estimators": [50, 100, 200, 400],
+                     "learning_rate": [0.05, 0.1, 0.5, 1.0]},
+                    cv=StratifiedKFold(5, shuffle=True, random_state=42),
+                    scoring="average_precision")
+grid.fit(X_train_oh, y_train)
+model = grid.best_estimator_            # learning_rate 0.5, 400 stumps</code></pre>
+
+      <p>
+        <a href="https://github.com/SharonBayela/Machine_learning_project_F26.git" target="_blank" rel="noopener">View the full AdaBoost code on GitHub</a>
+      </p>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="results" class="content-section">
+      <h3>Results</h3>
+
+      <p>The AdaBoost model addresses the early fraud detection part of the research question, so, like the decision tree, it predicts whether a claim is fraudulent. It does not predict claim amounts, claim frequency, or premiums.</p>
+
+      <h4>Tuning the Number of Rounds and the Learning Rate</h4>
+
+      <p>Two settings control AdaBoost: the number of rounds (<code>n_estimators</code>, how many stumps are added) and the learning rate (how much each stump counts). To see how they matter, a quarter of the training set was held out as a validation set, and the model was trained on the remaining three quarters with four learning rates. Accuracy on the validation set was recorded after every round, up to 400.</p>
+
+      <figure>
+        <img src="images/ab_validation_curve.png" alt="Validation accuracy by number of AdaBoost rounds for four learning rates" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Validation Accuracy as Rounds Are Added.</strong> Every curve starts near 0.917, the accuracy of calling every claim legitimate, and climbs as stumps are added. Larger learning rates learn faster: 0.5 and 1.0 reach about 0.95 within roughly 50 rounds, while 0.1 needs about 275 rounds and 0.05 never rises above 0.940 within 400 rounds. The learning rate of 1.0 peaks early and then slips slightly (0.9535 at round 100, 0.9510 at round 400), a sign of fitting noise, while the curves for 0.5 and 0.1 stay flat after their peaks.</figcaption>
+      </figure>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Best Validation Accuracy by Learning Rate</caption>
+          <thead><tr><th>Learning Rate</th><th>Best Validation Accuracy</th><th>At Round</th><th>Accuracy at Round 400</th></tr></thead>
+          <tbody>
+            <tr><td>0.05</td><td>0.9400</td><td>159</td><td>0.9400</td></tr>
+            <tr><td>0.1</td><td>0.9535</td><td>276</td><td>0.9530</td></tr>
+            <tr><td>0.5</td><td>0.9545</td><td>75</td><td>0.9540</td></tr>
+            <tr><td>1.0</td><td>0.9535</td><td>100</td><td>0.9510</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Validation Accuracy by Learning Rate.</strong> A learning rate of 0.5 gave the highest validation accuracy and reached it soonest.</figcaption>
+      </figure>
+
+      <p>Because accuracy hides the fraud class (91.7% of claims are legitimate), the final settings were chosen with five-fold cross validation on the whole training set, scored by the area under the precision-recall curve (PR-AUC). Sixteen combinations of rounds and learning rate were tried.</p>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>Cross-Validated PR-AUC by Rounds and Learning Rate</caption>
+          <thead><tr><th>Learning Rate</th><th>50 Rounds</th><th>100 Rounds</th><th>200 Rounds</th><th>400 Rounds</th></tr></thead>
+          <tbody>
+            <tr><td>0.05</td><td>0.339</td><td>0.480</td><td>0.688</td><td>0.754</td></tr>
+            <tr><td>0.10</td><td>0.521</td><td>0.687</td><td>0.755</td><td>0.770</td></tr>
+            <tr><td>0.50</td><td>0.752</td><td>0.765</td><td>0.774</td><td><strong>0.786</strong></td></tr>
+            <tr><td>1.00</td><td>0.745</td><td>0.773</td><td>0.785</td><td>0.785</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Cross-Validated PR-AUC.</strong> The best setting was a learning rate of 0.5 with 400 rounds (PR-AUC 0.786). Small learning rates need many more rounds to catch up, and a learning rate of 1.0 stops improving after 200 rounds.</figcaption>
+      </figure>
+
+      <h4>Final AdaBoost Model (Learning Rate 0.5, 400 Stumps)</h4>
+
+      <p>The tuned model was refit on the full training set and evaluated once on the testing set of 2,000 claims, which contains 1,834 legitimate claims and 166 fraudulent claims. In the first rounds the stumps were fairly accurate and received large vote weights: the first five stumps had weighted errors of 0.083, 0.136, 0.192, 0.236, and 0.275 and vote weights of 1.20, 0.93, 0.72, 0.59, and 0.48. Each later stump faces a harder, re-weighted problem, so its error rises and its vote weight falls, which is the behavior described in the Overview. (Scikit-learn multiplies the log-odds by the learning rate, and at 0.5 this equals the &frac12; in the textbook formula.)</p>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>AdaBoost Performance on the Test Set</caption>
+          <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td>Accuracy</td><td>95.60%</td></tr>
+            <tr><td>ROC-AUC</td><td>0.973</td></tr>
+            <tr><td>PR-AUC (baseline 0.083)</td><td>0.803</td></tr>
+            <tr><td>Fraud Precision</td><td>79.10%</td></tr>
+            <tr><td>Fraud Recall</td><td>63.86%</td></tr>
+            <tr><td>Fraud F1-Score</td><td>0.707</td></tr>
+            <tr><td>Specificity (Legitimate Recall)</td><td>98.47%</td></tr>
+            <tr><td>False Positives</td><td>28</td></tr>
+            <tr><td>False Negatives</td><td>60</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: AdaBoost Performance on the Test Set.</strong></figcaption>
+      </figure>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>AdaBoost Confusion Matrix (Test Set, n = 2,000)</caption>
+          <thead><tr><th></th><th>Predicted Legitimate</th><th>Predicted Fraud</th><th>Total</th></tr></thead>
+          <tbody>
+            <tr><td>Actual Legitimate</td><td>1,806</td><td>28</td><td>1,834</td></tr>
+            <tr><td>Actual Fraud</td><td>60</td><td>106</td><td>166</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: Confusion Matrix.</strong> The model correctly classified 1,806 legitimate and 106 fraudulent claims, flagged 28 legitimate claims as fraud, and missed 60 fraudulent claims.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/ab_confusion_matrix.png" alt="AdaBoost confusion matrix, counts and normalized by true class" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: Confusion Matrix.</strong> The left panel shows counts and the right panel shows the share of each true class. The model identified 98% of legitimate claims and 64% of fraudulent claims correctly.</figcaption>
+      </figure>
+
+      <p>The accuracy of 95.60% is above the 91.70% that a model labeling every claim legitimate would reach, so, unlike the earlier fraud models, AdaBoost beats the no-skill baseline on accuracy. The more informative measures are precision and recall. Of the 134 claims the model flagged, 106 were truly fraudulent (79.10%), roughly 9.5 times the 8.3% fraud rate in the test set, and it flagged only about 6.7% of all claims. The cost is recall: it found 106 of the 166 fraudulent claims (63.86%) and missed 60.</p>
+
+      <figure>
+        <img src="images/ab_importance.png" alt="AdaBoost feature importance" style="width:100%; height:auto; display:block;">
+        <figcaption><strong>Figure: AdaBoost Feature Importance.</strong> Importance is the share of the model's total split quality that each feature supplies. <code>Service_Claim_days</code> accounts for about 82% of it, <code>Claim_Amount</code> for about 13%, and <code>No_of_Claims_Provider</code> for about 4%. Every other feature contributes less than 0.5%. These importances are descriptive and are not evidence that any characteristic causes fraud.</figcaption>
+      </figure>
+
+      <h4>Comparison with the Decision Tree</h4>
+
+      <figure>
+        <table class="cluster-table">
+          <caption>AdaBoost vs Decision Tree on the Same Test Set</caption>
+          <thead><tr><th>Metric</th><th>Decision Tree</th><th>AdaBoost</th><th>Difference</th></tr></thead>
+          <tbody>
+            <tr><td>Accuracy</td><td>87.35%</td><td>95.60%</td><td>+8.25 points</td></tr>
+            <tr><td>Fraud Precision</td><td>39.10%</td><td>79.10%</td><td>+40.0 points</td></tr>
+            <tr><td>Fraud Recall</td><td>93.98%</td><td>63.86%</td><td>&minus;30.1 points</td></tr>
+            <tr><td>ROC-AUC</td><td>0.966</td><td>0.973</td><td>+0.007</td></tr>
+            <tr><td>PR-AUC</td><td>0.761</td><td>0.803</td><td>+0.042</td></tr>
+            <tr><td>False Positives</td><td>243</td><td>28</td><td>&minus;215</td></tr>
+            <tr><td>False Negatives</td><td>10</td><td>60</td><td>+50</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: AdaBoost and the Decision Tree.</strong> Both models used the same 80/20 split and the same 14 predictors.</figcaption>
+      </figure>
+
+      <p>AdaBoost did better overall. Its accuracy was 8.25 percentage points higher, its precision was about twice as high (79.1% versus 39.1%), it raised only 28 false alarms instead of 243, and it scored higher on both ROC-AUC (0.973 versus 0.966) and PR-AUC (0.803 versus 0.761). The tree, however, caught far more fraud (156 of 166 claims versus 106), so the two models sit at different points of the precision and recall trade-off. That difference is partly a design choice. The tree was trained with balanced class weights to favor recall, while AdaBoost used the default 0.5 cutoff with no class weights. The threshold-free measures give the fairest comparison, and they show a real but moderate improvement for AdaBoost (PR-AUC +0.042, ROC-AUC +0.007). Both models also agree on what matters most, since each is driven mainly by <code>Service_Claim_days</code> and then <code>Claim_Amount</code>.</p>
+    </section>
+
+    <!-- CONCLUSIONS -->
+    <section id="conclusions" class="content-section">
+      <h3>Conclusions</h3>
+
+      <p>AdaBoost strengthened the fraud detection results. The tuned model, 400 stumps with a learning rate of 0.5, reached an accuracy of 95.6%, an ROC-AUC of 0.973, and a PR-AUC of 0.803, the best scores among the models tested so far. When it flagged a claim, the claim was fraudulent 79.1% of the time, about twice the precision of the decision tree, and it raised only 28 false alarms out of 1,834 legitimate claims. For an insurer, this means a reviewer's time is far better spent, since nearly four in five flagged claims are worth investigating. The price is that 60 of the 166 fraudulent claims (36%) were not flagged. The result also shows how boosting works in practice: no single stump is accurate, but the weighted vote of hundreds of stumps, each focused on the claims its predecessors misjudged, produced a much more precise classifier than one tree.</p>
+
+      <p>The model also repeats a message from the earlier tabs. About 82% of its importance comes from <code>Service_Claim_days</code>, with a further 13% from <code>Claim_Amount</code> and 4% from <code>No_of_Claims_Provider</code>, while patient, insurance, state, and diagnosis characteristics contributed almost nothing. Fraud in this dataset is therefore mainly a pattern of claims submitted soon after service, for larger amounts, by providers with many claims, all of which are known when a claim arrives. This supports the early fraud detection goal of the project, but it does not answer the pricing side. AdaBoost predicts a class, so it says nothing about how much a claim will cost or how often claims occur, and the linear regression on the previous tab found that claim cost was barely explained by the available characteristics. Fraud scores from this model could serve as an additional input for risk-based pricing, while severity and frequency still depend on the models that follow.</p>
+
+      <p>Several limits apply. The testing set holds only 166 fraudulent claims, so each missed or caught claim moves the recall by about 0.6 points. The best number of rounds (400) is the largest value tried, so the tuned model might improve with more rounds. AdaBoost and the decision tree also operate at different cutoffs, so the gap in precision and recall is partly a matter of threshold and not only of model quality, and a lower cutoff would let AdaBoost trade some precision for more recall. Finally, the patterns are very clean (one variable explains most of the signal), which suggests the data may be synthetic and that real claims could be harder to separate. The next two models, gradient boosting and XGBoost, build on the same idea and will show whether fitting each new tree to the remaining errors, instead of re-weighting claims, can improve on both fraud detection and the weak severity predictions.</p>
+    </section>
+
+    <p>
+      <a href="https://github.com/SharonBayela/Machine_learning_project_F26.git" target="_blank" rel="noopener">
+          View the code on GitHub
+      </a>
+    </p>
   </div>
 </main>
 <footer class="site-footer">
