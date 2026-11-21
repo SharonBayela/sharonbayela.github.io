@@ -96,13 +96,12 @@
           <caption>One-Hot Encoding of Insurance_Type (First Three Training Claims)</caption>
           <thead>
             <tr>
-              <th>Training Row</th>
-              <th>Insurance_Type</th>
-              <th>Insurance_Type_Medicaid</th>
-              <th>Insurance_Type_Medicare</th>
-              <th>Insurance_Type_Other</th>
-              <th>Insurance_Type_Private</th>
-              <th>Insurance_Type_Self-Pay</th>
+              <th rowspan="2">Row</th>
+              <th rowspan="2">Before</th>
+              <th colspan="5">After: Insurance_Type_ columns</th>
+            </tr>
+            <tr>
+              <th>Medicaid</th><th>Medicare</th><th>Other</th><th>Private</th><th>Self-Pay</th>
             </tr>
           </thead>
           <tbody>
@@ -111,7 +110,7 @@
             <tr><td>1146</td><td>Self-Pay</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
           </tbody>
         </table>
-        <figcaption><strong>Table: One-Hot Encoding Example.</strong> The first three training claims have insurance types Medicaid, Private, and Self-Pay. Each claim has a 1 in the column that matches its insurance type and 0 in the other four.</figcaption>
+        <figcaption><strong>Table: One-Hot Encoding Example.</strong> Each claim has a 1 in the column matching its insurance type and 0 in the other four.</figcaption>
       </figure>
 
       <h4>Training and Testing Sets</h4>
