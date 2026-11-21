@@ -107,21 +107,11 @@
       <p>The two sets must be disjoint, meaning that no claim appears in both. If the model were tested on claims it had already seen, it could be scored on memory instead of on its ability to predict new claims, and the reported accuracy would be too optimistic. The code checks this directly by counting the rows shared by the two sets, and the count is 0.</p>
     </section>
 
-    <!-- CODE -->
-    <section id="code" class="content-section">
-      <h3>Code</h3>
-
-      <p>The models were fitted in Python with scikit-learn: <code>LinearRegression</code> for claim severity and <code>LogisticRegression</code> for fraud. The logistic model uses <code>class_weight="balanced"</code> so that the 8.3% fraud class is not ignored, matching the decision tree.</p>
-
-<pre><code>lin = LinearRegression().fit(Xtr_lin, ytr_lin)                 # target: Claim_Amount
-logit = LogisticRegression(class_weight="balanced",
-                           max_iter=5000, random_state=42)
-logit.fit(Xtr_log, ytr_log)                                    # target: Is_Fraud</code></pre>
-
-      <p>
-        <a href="https://github.com/SharonBayela/Machine_learning_project_F26.git" target="_blank" rel="noopener">View the full regression code on GitHub</a>
-      </p>
-    </section>
+       <p>
+      <a href="https://github.com/SharonBayela/Machine_learning_project_F26.git" target="_blank" rel="noopener">
+          View the code on GitHub
+      </a>
+    </p>
 
     <!-- RESULTS -->
     <section id="results" class="content-section">
@@ -130,6 +120,7 @@ logit.fit(Xtr_log, ytr_log)                                    # target: Is_Frau
       <h4>Linear Regression: Predicting Claim Severity</h4>
 
       <p>The model was evaluated on the 2,000 test claims against a baseline that always predicts the training mean ($572.65).</p>
+      <p>The model uses balanced class weights so the 8.3% fraud class is not ignored, matching the decision tree.</p>
 
       <figure>
         <table class="cluster-table">
