@@ -89,12 +89,30 @@
         <figcaption><strong>Figure: Data After One-Hot Encoding.</strong> A few of the 51 numeric columns after encoding. Every column is now a number that AdaBoost can split on.</figcaption>
       </figure>
 
-      <p>The step on one column, <code>Insurance_Type</code>, is shown below. The first three training claims are Medicaid, Private, and Self-Pay, and each becomes a row with a single 1 in the matching column.</p>
+      <p>The step on one column, <code>Insurance_Type</code>, is shown in the table below.</p>
 
-<pre><code>      Insurance_Type  Insurance_Type_Medicaid  Insurance_Type_Medicare  Insurance_Type_Other  Insurance_Type_Private  Insurance_Type_Self-Pay
-9326        Medicaid                        1                        0                     0                       0                        0
-5375         Private                        0                        0                     0                       1                        0
-1146        Self-Pay                        0                        0                     0                       0                        1</code></pre>
+      <figure>
+        <table class="cluster-table">
+          <caption>One-Hot Encoding of Insurance_Type (First Three Training Claims)</caption>
+          <thead>
+            <tr>
+              <th>Training Row</th>
+              <th>Insurance_Type</th>
+              <th>Insurance_Type_Medicaid</th>
+              <th>Insurance_Type_Medicare</th>
+              <th>Insurance_Type_Other</th>
+              <th>Insurance_Type_Private</th>
+              <th>Insurance_Type_Self-Pay</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>9326</td><td>Medicaid</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><td>5375</td><td>Private</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+            <tr><td>1146</td><td>Self-Pay</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+          </tbody>
+        </table>
+        <figcaption><strong>Table: One-Hot Encoding Example.</strong> The first three training claims have insurance types Medicaid, Private, and Self-Pay. Each claim has a 1 in the column that matches its insurance type and 0 in the other four.</figcaption>
+      </figure>
 
       <h4>Training and Testing Sets</h4>
 
